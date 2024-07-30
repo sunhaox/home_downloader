@@ -1,0 +1,14 @@
+.FilesList {
+    display: ruby-text;
+    max-width: 500px;
+    margin: auto;
+    padding: 10px 40px;
+}
+
+.FilesList-right {
+    float: right;
+}
+
+.FilesList-left {
+    float: left;
+}
