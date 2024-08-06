@@ -4,6 +4,7 @@ import re
 import subprocess
 import os
 from flask_cors import CORS
+from gevent import pywsgi
 app = Flask(__name__)
 CORS(app)
 
@@ -122,4 +123,6 @@ def shell_kill():
     return "123"
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8088)
+    # app.run(debug=True, port=8088)
+    server = pywsgi.WSGIServer(('0.0.0.0', 8088), app)
+    server.serve_forever()
