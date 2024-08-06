@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { Button, Drawer } from 'antd';
+import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Drawer, Alert } from 'antd';
+import { Header } from 'antd/es/layout/layout';
 
 interface Props {
     files: string[]
@@ -10,7 +11,8 @@ interface Props {
 interface State {
     drawerOpen: boolean,
     drawerLoading: boolean,
-    deviceList: JSX.Element
+    deviceList: JSX.Element,
+    fileName: string
 }
 
 class FilesList extends Component<Props, State> {
@@ -21,11 +23,14 @@ class FilesList extends Component<Props, State> {
         this.state = {
             drawerOpen: false,
             drawerLoading: false,
-            deviceList: <></>
+            deviceList: <></>,
+            fileName: ""
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
         this.onFileBottonClick = this.onFileBottonClick.bind(this);
+        this.onDeviceClick = this.onDeviceClick.bind(this);
+        this.onDevicesRefreshButtonClick = this.onDevicesRefreshButtonClick.bind(this);
     }
 
     render() {
@@ -38,7 +43,7 @@ class FilesList extends Component<Props, State> {
                             {val}
                         </div>
                         <div className='FilesList-right'>
-                            <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileBottonClick} />
+                            <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileBottonClick} id={'btn-'+index} />
                         </div>
                     </div>
                 ))}
@@ -52,6 +57,7 @@ class FilesList extends Component<Props, State> {
                     loading={this.state.drawerLoading}
                     key={"top"}
                 >
+                    <Button type='primary' shape='circle' icon={<ReloadOutlined />} onClick={this.onDevicesRefreshButtonClick}></Button>
                     {this.state.deviceList}
                 </Drawer>
             </>
@@ -62,28 +68,69 @@ class FilesList extends Component<Props, State> {
         this.setState({drawerOpen: false})
     }
 
-    onFileBottonClick() {
+    onFileBottonClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         this.setState({drawerOpen: true})
 
-        // TODO Get the file name
+        const btnId = e.currentTarget.id;
+        const index = btnId.substring(4);
+        const fileName = this.props.files[Number(index)];
+        this.setState({fileName: fileName})
+        console.log(fileName);
         
-        // TODO get json
-        this.setState({drawerLoading: true})
-        setTimeout(() => {
-            this.onAjaxEvent();
-        }, 2000)
     }
 
-    onAjaxEvent() {
-        // TODO analyse response
-        this.setState({deviceList: <>
-            <ul>
-                <li>tv</li>
-                <li>魔百盒TV</li>
-            </ul>
-        </>})
+    onDevicesRefreshButtonClick = async() =>{
+        this.setState({drawerLoading: true})
+        try {
+            const response = await fetch('http://localhost:8088/go2tv_l');
+            const result = await response.text();
+            try{
+                const json = JSON.parse(result);
+                let deviceListElements = [];
+                
+                for( let i = 0; i < json['devices'].length; i++) {
+                    deviceListElements.push(<p onClick={this.onDeviceClick} id={json['devices'][i]['URL']}>{json['devices'][i]['model']}</p>)
+                }
+
+                const rst = <>{deviceListElements}</>
+                this.setState({deviceList: rst})
+            }
+            catch(error) {
+                const errorString = String(error);
+                this.setState({deviceList: <>
+                    <Alert message={result} type="error" />
+                    <Alert message={String(error)} type="error" />
+                </>})
+            }
+        }
+        catch (error) {
+            const errorString = String(error);
+            this.setState({deviceList: <>
+                <Alert message={errorString} type="error" />
+            </>})
+        }
 
         this.setState({drawerLoading: false})
+    }
+
+    async onDeviceClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        let url = e.currentTarget.id;
+        let file = this.state.fileName;
+        console.log(e.currentTarget.innerText);
+        console.log(e.currentTarget.id);
+
+        try {
+            const response = await fetch('http://localhost:8088/go2tv_s', {
+                method: 'POST',
+                headers: new Headers({'Content-Type': 'application/json'}),
+                body: JSON.stringify({filename: file, url: url})
+            })
+
+            console.log(await response.text());
+        }
+        catch(error) {
+            console.log(error);
+        }
     }
 }
 

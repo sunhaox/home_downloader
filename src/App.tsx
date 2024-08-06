@@ -31,7 +31,7 @@ class App extends Component<{}, State> {
                 </div>
                 <div className="App" style={{ display: this.state.loading ? "none" : 'block' }}>
                     <div className='App-header'>
-                        <Tooltip title="search">
+                        <Tooltip title="refresh">
                             <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} />
                         </Tooltip>
                     </div>
@@ -46,6 +46,18 @@ class App extends Component<{}, State> {
 
     onRefreshButtonClick() {
         // TODO get json and update
+        this.getFilesName();
+    }
+
+    getFilesName = async() =>{
+        try {
+            const response = await fetch('http://localhost:8088/ls');
+            const result = await response.json();
+            this.setState({filesName: result})
+        }
+        catch (error) {
+            console.log(error);
+        }
     }
 }
 
