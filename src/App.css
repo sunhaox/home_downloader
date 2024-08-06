@@ -1,13 +1,10 @@
 .App {
     text-align: center;
+    max-width: 500px;
+    margin: auto;
 }
 
 .App-loading {
     margin-top: 35px;
     pointer-events: none;
-}
-
-.App-header {
-    margin: 20px;
-    text-align: right;
 }

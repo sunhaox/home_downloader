@@ -1,42 +1,47 @@
 import React, { Component } from 'react';
 import './FilesList.css';
 import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Drawer, Alert } from 'antd';
-import { Header } from 'antd/es/layout/layout';
-
-interface Props {
-    files: string[]
-}
+import { Button, Drawer, Alert, Tooltip, Divider } from 'antd';
 
 interface State {
     drawerOpen: boolean,
     drawerLoading: boolean,
     deviceList: JSX.Element,
     fileName: string
+    filesName: string[]
 }
 
-class FilesList extends Component<Props, State> {
+class FilesList extends Component<{}, State> {
 
-    constructor(props: Props) {
+    constructor(props: {}) {
         super(props);
 
         this.state = {
             drawerOpen: false,
             drawerLoading: false,
             deviceList: <></>,
-            fileName: ""
+            fileName: "",
+            filesName: []
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
         this.onFileBottonClick = this.onFileBottonClick.bind(this);
         this.onDeviceClick = this.onDeviceClick.bind(this);
         this.onDevicesRefreshButtonClick = this.onDevicesRefreshButtonClick.bind(this);
+        this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this)
     }
 
     render() {
         return (
             <>
-                {this.props.files.map((val, index) => (
+                <div className='FilesList-header'>
+                    <Tooltip title="refresh">
+                        <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} />
+                    </Tooltip>
+                </div>
+                <Divider />
+                
+                {this.state.filesName.map((val, index) => (
                     <div className='FilesList'>
                         <div className='FilesList-left'>
                             <FileImageOutlined />
@@ -73,7 +78,7 @@ class FilesList extends Component<Props, State> {
 
         const btnId = e.currentTarget.id;
         const index = btnId.substring(4);
-        const fileName = this.props.files[Number(index)];
+        const fileName = this.state.filesName[Number(index)];
         this.setState({fileName: fileName})
         console.log(fileName);
         
@@ -129,6 +134,22 @@ class FilesList extends Component<Props, State> {
             console.log(await response.text());
         }
         catch(error) {
+            console.log(error);
+        }
+    }
+
+    onRefreshButtonClick() {
+        // TODO get json and update
+        this.getFilesName();
+    }
+
+    getFilesName = async() =>{
+        try {
+            const response = await fetch('http://localhost:8088/ls');
+            const result = await response.json();
+            this.setState({filesName: result})
+        }
+        catch (error) {
             console.log(error);
         }
     }

@@ -13,12 +13,16 @@ def index():
 
 @app.route('/ps', methods=['GET', 'POST'])
 def shell_ps():
-    result = subprocess.run(['ls', '/storage/media'], capture_output=True, text=True)
+    result = subprocess.run(['ps', '-C', 'go2tv'], capture_output=True, text=True)
     output = result.stdout
 
     if result.stderr:
         output = result.stderr
+        return output
+    
+    pid_pattern = re.compile(r'\s+(\d+)\s')
 
+    output = pid_pattern.findall(output)
     return output
 
 @app.route('/ls', methods=['GET', 'POST'])
@@ -92,6 +96,26 @@ def shell_go2tv_s():
         completion = subprocess.Popen(['go2tv', '-t', url, '-v', file], shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
  
         return str(completion.pid)
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+    return "123"
+
+@app.route('/kill', methods=['GET', 'POST'])
+def shell_kill():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        pid = json_data['pid']
+    
+        result = subprocess.run(['kill', pid], capture_output=True, text=True)
+        output = result.stdout
+
+        if result.stderr:
+            output = result.stderr
+            return output
+        
+        return output
     else:
         raw_data = request.get_data(as_text=True)
         print(raw_data)

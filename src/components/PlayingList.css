@@ -1,19 +1,19 @@
-.FilesList {
+.PlayingList {
     display: ruby-text;
     max-width: 500px;
     margin: auto;
     padding: 10px 40px;
 }
 
-.FilesList-header {
+.PlayingList-header {
     margin: 20px;
     text-align: right;
 }
 
-.FilesList-right {
+.PlayingList-right {
     float: right;
 }
 
-.FilesList-left {
+.PlayingList-left {
     float: left;
 }

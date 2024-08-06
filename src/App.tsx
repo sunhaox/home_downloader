@@ -1,24 +1,38 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Spin, Tooltip, Button, Divider } from 'antd';
+import { Spin, Tooltip, Button, Divider, Tabs, TabsProps } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import FilesList from './components/FilesList';
+import PlayingList from './components/PlayingList'
 
 interface State {
-    loading: boolean,
-    filesName: string[]
+    loading: boolean
 }
 
 class App extends Component<{}, State> {
 
+    items: TabsProps['items'] = [];
+
     constructor(props: {}) {
         super(props);
         this.state = {
-            loading: false,
-            filesName: ["file1.mp4", "file2.mp4"]
+            loading: false
         }
 
-        this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this)
+        this.items = [
+            {
+                key: '1',
+                label: 'Files',
+                children: <div>
+                            <FilesList></FilesList>
+                        </div>,
+            },
+            {
+                key: '2',
+                label: 'Playing',
+                children: <><PlayingList></PlayingList></>,
+            }
+        ];
     }
 
     render() {
@@ -30,35 +44,13 @@ class App extends Component<{}, State> {
                     </Spin>
                 </div>
                 <div className="App" style={{ display: this.state.loading ? "none" : 'block' }}>
-                    <div className='App-header'>
-                        <Tooltip title="refresh">
-                            <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} />
-                        </Tooltip>
-                    </div>
-                    <Divider />
-                    <div>
-                        <FilesList files={this.state.filesName}></FilesList>
-                    </div>
+                    <Tabs defaultActiveKey='1' items={this.items} />
                 </div>
             </>
         );
     }
 
-    onRefreshButtonClick() {
-        // TODO get json and update
-        this.getFilesName();
-    }
 
-    getFilesName = async() =>{
-        try {
-            const response = await fetch('http://localhost:8088/ls');
-            const result = await response.json();
-            this.setState({filesName: result})
-        }
-        catch (error) {
-            console.log(error);
-        }
-    }
 }
 
 export default App;
