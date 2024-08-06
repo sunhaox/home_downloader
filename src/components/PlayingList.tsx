@@ -51,7 +51,7 @@ class PlayingList extends Component<{}, State> {
         console.log(pid);
 
         try {
-            const response = await fetch('http://localhost:8088/kill', {
+            const response = await fetch('/kill', {
                 method: 'POST',
                 headers: new Headers({'Content-Type': 'application/json'}),
                 body: JSON.stringify({pid: pid})
@@ -73,7 +73,7 @@ class PlayingList extends Component<{}, State> {
 
     getPlayingList = async() =>{
         try {
-            const response = await fetch('http://localhost:8088/ps');
+            const response = await fetch('/ps');
             const result = await response.json();
             this.setState({playingList: result})
         }

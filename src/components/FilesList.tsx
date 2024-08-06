@@ -87,7 +87,7 @@ class FilesList extends Component<{}, State> {
     onDevicesRefreshButtonClick = async() =>{
         this.setState({drawerLoading: true})
         try {
-            const response = await fetch('http://localhost:8088/go2tv_l');
+            const response = await fetch('/go2tv_l');
             const result = await response.text();
             try{
                 const json = JSON.parse(result);
@@ -125,7 +125,7 @@ class FilesList extends Component<{}, State> {
         console.log(e.currentTarget.id);
 
         try {
-            const response = await fetch('http://localhost:8088/go2tv_s', {
+            const response = await fetch('/go2tv_s', {
                 method: 'POST',
                 headers: new Headers({'Content-Type': 'application/json'}),
                 body: JSON.stringify({filename: file, url: url})
@@ -145,7 +145,7 @@ class FilesList extends Component<{}, State> {
 
     getFilesName = async() =>{
         try {
-            const response = await fetch('http://localhost:8088/ls');
+            const response = await fetch('/ls');
             const result = await response.json();
             this.setState({filesName: result})
         }
