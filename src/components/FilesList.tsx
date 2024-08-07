@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './FilesList.css';
 import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Drawer, Alert, Tooltip, Divider } from 'antd';
+import { Button, Drawer, Alert, Tooltip, Divider, Row, Col } from 'antd';
 
 interface State {
     drawerOpen: boolean,
@@ -21,7 +21,7 @@ class FilesList extends Component<{}, State> {
             drawerLoading: false,
             deviceList: <></>,
             fileName: "",
-            filesName: []
+            filesName: ["very_long_long_long_long_long_file_name.mp4", "common_file_name.mp4"]
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
@@ -42,15 +42,17 @@ class FilesList extends Component<{}, State> {
                 <Divider />
                 
                 {this.state.filesName.map((val, index) => (
-                    <div className='FilesList'>
-                        <div className='FilesList-left'>
-                            <FileImageOutlined />
-                            {val}
-                        </div>
-                        <div className='FilesList-right'>
-                            <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileBottonClick} id={'btn-'+index} />
-                        </div>
-                    </div>
+                    <>
+                        <Row>
+                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hiden'}}>
+                                <FileImageOutlined />
+                                {val}
+                            </Col>
+                            <Col span={4}>
+                                <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileBottonClick} id={'btn-'+index} />
+                            </Col>
+                        </Row>
+                    </>
                 ))}
 
                 <Drawer

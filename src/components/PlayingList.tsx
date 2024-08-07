@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './PlayingList.css';
-import { Button, Divider, Tooltip } from 'antd';
+import { Button, Col, Divider, Row, Tooltip } from 'antd';
 import { ReloadOutlined, PlaySquareOutlined, CloseOutlined } from '@ant-design/icons';
 
 interface State {
@@ -29,15 +29,17 @@ class PlayingList extends Component<{}, State> {
                 </div>
                 <Divider />
                 {this.state.playingList.map((val, index) => (
-                    <div className='FilesList'>
-                        <div className='FilesList-left'>
-                            <PlaySquareOutlined />
-                            {val}
-                        </div>
-                        <div className='FilesList-right'>
-                            <Button type="primary" shape="circle" icon={<CloseOutlined />} onClick={this.onPlayingCloseButtonClick} id={'btn-'+index} danger />
-                        </div>
-                    </div>
+                    <>
+                        <Row>
+                            <Col span={20} style={{textAlign: 'left'}}>
+                                <PlaySquareOutlined />
+                                {val}
+                            </Col>
+                            <Col span={4}>
+                                <Button type="primary" shape="circle" icon={<CloseOutlined />} onClick={this.onPlayingCloseButtonClick} id={'btn-'+index} danger />
+                            </Col>
+                        </Row>
+                    </>
                 ))}
             </>
         )
