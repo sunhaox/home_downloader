@@ -89,7 +89,7 @@ class FilesList extends Component<{}, State> {
     onDevicesRefreshButtonClick = async() =>{
         this.setState({drawerLoading: true})
         try {
-            const response = await fetch('/go2tv_l');
+            const response = await fetch(config.host + '/go2tv_l');
             const result = await response.text();
             try{
                 const json = JSON.parse(result);
@@ -103,7 +103,6 @@ class FilesList extends Component<{}, State> {
                 this.setState({deviceList: rst})
             }
             catch(error) {
-                const errorString = String(error);
                 this.setState({deviceList: <>
                     <Alert message={result} type="error" />
                     <Alert message={String(error)} type="error" />
@@ -127,7 +126,7 @@ class FilesList extends Component<{}, State> {
         console.log(e.currentTarget.id);
 
         try {
-            const response = await fetch('/go2tv_s', {
+            const response = await fetch(config.host + '/go2tv_s', {
                 method: 'POST',
                 headers: new Headers({'Content-Type': 'application/json'}),
                 body: JSON.stringify({filename: file, url: url})
@@ -147,7 +146,7 @@ class FilesList extends Component<{}, State> {
 
     getFilesName = async() =>{
         try {
-            const response = await fetch('/ls');
+            const response = await fetch(config.host + '/ls');
             const result = await response.json();
             this.setState({filesName: result})
         }

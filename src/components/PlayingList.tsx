@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './PlayingList.css';
 import { Button, Col, Divider, Row, Tooltip } from 'antd';
 import { ReloadOutlined, PlaySquareOutlined, CloseOutlined } from '@ant-design/icons';
+import config from '../config'
 
 interface State {
     playingList: string[]
@@ -53,7 +54,7 @@ class PlayingList extends Component<{}, State> {
         console.log(pid);
 
         try {
-            const response = await fetch('/kill', {
+            const response = await fetch(config.host + '/kill', {
                 method: 'POST',
                 headers: new Headers({'Content-Type': 'application/json'}),
                 body: JSON.stringify({pid: pid})
@@ -75,7 +76,7 @@ class PlayingList extends Component<{}, State> {
 
     getPlayingList = async() =>{
         try {
-            const response = await fetch('/ps');
+            const response = await fetch(config.host + '/ps');
             const result = await response.json();
             this.setState({playingList: result})
         }
