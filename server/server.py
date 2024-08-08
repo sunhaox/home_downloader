@@ -122,6 +122,20 @@ def shell_kill():
         print(raw_data)
     return "123"
 
+@app.route('/delete', methods=['GET', 'POST'])
+def delete_file():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        fileName = json_data['file']
+        
+        os.remove('/storage/media/' + fileName)
+        return ''
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+        return raw_data
+
 if __name__ == '__main__':
     # app.run(debug=True, port=8088)
     server = pywsgi.WSGIServer(('0.0.0.0', 8088), app)

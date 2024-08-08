@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Drawer, Alert, Tooltip, Divider, Row, Col } from 'antd';
+import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Drawer, Alert, Tooltip, Divider, Row, Col, Popconfirm } from 'antd';
+import config from '../config'
 
 interface State {
     drawerOpen: boolean,
@@ -28,7 +29,8 @@ class FilesList extends Component<{}, State> {
         this.onFileBottonClick = this.onFileBottonClick.bind(this);
         this.onDeviceClick = this.onDeviceClick.bind(this);
         this.onDevicesRefreshButtonClick = this.onDevicesRefreshButtonClick.bind(this);
-        this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this)
+        this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this);
+        this.onFileDeleteConfirm = this.onFileDeleteConfirm.bind(this);
     }
 
     render() {
@@ -44,9 +46,21 @@ class FilesList extends Component<{}, State> {
                 {this.state.filesName.map((val, index) => (
                     <>
                         <Row>
-                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hiden'}}>
+                            <Col span={16} style={{textAlign: 'left', textOverflow: 'hiden'}}>
                                 <FileImageOutlined />
                                 {val}
+                            </Col>
+                            <Col span={4}>
+                                <Popconfirm
+                                    title="Delete the file"
+                                    description="Are you sure to delete this file?"
+                                    onConfirm={this.onFileDeleteConfirm}
+                                    okText="Yes"
+                                    cancelText="No"
+                                    okButtonProps={{id: 'del-'+index}}
+                                >
+                                    <Button shape='circle' type='primary' icon={<DeleteOutlined />} danger></Button>
+                                </Popconfirm>
                             </Col>
                             <Col span={4}>
                                 <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileBottonClick} id={'btn-'+index} />
@@ -69,6 +83,22 @@ class FilesList extends Component<{}, State> {
                 </Drawer>
             </>
         );
+    }
+
+    async onFileDeleteConfirm(e?: React.MouseEvent<HTMLElement>) {
+        if (e) {
+            const btnId = e.currentTarget.id;
+            const index = btnId.substring(4);
+            const fileName = this.state.filesName[Number(index)]
+            console.log(fileName);
+            const response = await fetch(config.host + '/delete', {
+                method: 'POST',
+                headers: new Headers({'Content-Type': 'application/json'}),
+                body: JSON.stringify({file: fileName})
+            })
+
+            console.log(await response.text());
+        }
     }
 
     onDrawerClose() {

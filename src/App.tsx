@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Spin, Tooltip, Button, Divider, Tabs, TabsProps } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Spin, Tabs, TabsProps } from 'antd';
 import FilesList from './components/FilesList';
 import PlayingList from './components/PlayingList'
 
