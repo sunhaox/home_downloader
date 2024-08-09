@@ -20,7 +20,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "node ./scripts/build-react-no-split.js && cp build/static/css/main.css server/static/css/ &&  cp build/static/js/main.js server/static/js/",
+    "build": "node ./scripts/build-react-no-split.js && cp build/index.html server/templates/ && cp build/static/css/main.css server/static/css/ &&  cp build/static/js/main.js server/static/js/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
