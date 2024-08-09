@@ -1,4 +1,4 @@
-import time
+import json
 from flask import Flask, render_template, request
 import re
 import subprocess
@@ -7,6 +7,10 @@ from flask_cors import CORS
 from gevent import pywsgi
 app = Flask(__name__)
 CORS(app)
+
+
+root_folder = ''
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -28,10 +32,18 @@ def shell_ps():
 
 @app.route('/ls', methods=['GET', 'POST'])
 def list_files():
+    last_file = ''
+    with open('config.json', 'r') as ifile:
+        data = json.load(ifile)
+        last_file = data['recent']
+    
     file_paths = []
-    for root, dirs, files in os.walk('/storage/media'):
+    for root, dirs, files in os.walk(root_folder):
         for file in files:
-            file_paths.append(file)
+            if (file == last_file):
+                file_paths.append(file + '*')
+            else:
+                file_paths.append(file)
     
     # sort the array
     file_paths.sort()
@@ -91,10 +103,19 @@ def shell_go2tv_s():
         json_data = request.get_json()
         
         url = json_data['url']
-        file = json_data['filename']
-        file = '/storage/media/' + file
+        fileName = json_data['filename']
+        filePath = root_folder + fileName
     
-        completion = subprocess.Popen(['go2tv', '-t', url, '-v', file], shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        completion = subprocess.Popen(['go2tv', '-t', url, '-v', filePath], shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # store the filename in config file
+        with open('config.json', 'r') as ifile:
+            data = json.load(ifile)
+            
+            data['recent'] = fileName
+            
+            with open('config.json', 'w') as ofile:
+                json.dump(data, ofile, indent=4)
  
         return str(completion.pid)
     else:
@@ -129,7 +150,7 @@ def delete_file():
         
         fileName = json_data['file']
         
-        os.remove('/storage/media/' + fileName)
+        os.remove(root_folder + fileName)
         return ''
     else:
         raw_data = request.get_data(as_text=True)
@@ -137,6 +158,20 @@ def delete_file():
         return raw_data
 
 if __name__ == '__main__':
+    
+    # check the config file
+    if (not os.path.exists("config.json")):
+        # create the config file if not exist
+        data = {}
+        data['recent'] = ''
+        data['root'] = '/storage/media/'
+        with open('config.json', 'w') as ofile:
+            json.dump(data, ofile, indent=4)
+    else:
+        with open('config.json', 'r') as ifile:
+            data = json.load(ifile)
+            root_folder = data['root']
+    
     # app.run(debug=True, port=8088)
     server = pywsgi.WSGIServer(('0.0.0.0', 8088), app)
     server.serve_forever()
