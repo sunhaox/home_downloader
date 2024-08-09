@@ -26,7 +26,7 @@ class FilesList extends Component<{}, State> {
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
-        this.onFileBottonClick = this.onFileBottonClick.bind(this);
+        this.onFileButtonClick = this.onFileButtonClick.bind(this);
         this.onDeviceClick = this.onDeviceClick.bind(this);
         this.onDevicesRefreshButtonClick = this.onDevicesRefreshButtonClick.bind(this);
         this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this);
@@ -63,7 +63,7 @@ class FilesList extends Component<{}, State> {
                                 </Popconfirm>
                             </Col>
                             <Col span={4}>
-                                <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileBottonClick} id={'btn-'+index} />
+                                <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileButtonClick} id={'btn-'+index} />
                             </Col>
                         </Row>
                     </>
@@ -105,7 +105,7 @@ class FilesList extends Component<{}, State> {
         this.setState({drawerOpen: false})
     }
 
-    onFileBottonClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    onFileButtonClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         this.setState({drawerOpen: true})
 
         const btnId = e.currentTarget.id;
