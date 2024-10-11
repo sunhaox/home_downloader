@@ -37,16 +37,28 @@ def list_files():
         data = json.load(ifile)
         last_file = data['recent']
     
-    file_paths = []
-    for root, dirs, files in os.walk(root_folder):
-        for file in files:
-            if (file == last_file):
-                file_paths.append(file + '*')
-            else:
-                file_paths.append(file)
+    file_paths = iteration_list_folder(root_folder, last_file)
     
     # sort the array
-    file_paths.sort()
+    # file_paths.sort()
+    
+    return file_paths
+
+def iteration_list_folder(root_folder, last_file = '', level = 0):
+    file_paths = {}
+    file_paths['file'] = []
+    
+    with os.scandir(root_folder) as entries:
+        for file_path in entries:
+            if file_path.is_file():
+                if (file_path == last_file):
+                    file_paths['file'].append(file_path.name + "*")
+                else:
+                    file_paths['file'].append(file_path.name)
+            else:
+                if 'folder' not in file_paths:
+                    file_paths['folder'] = {}
+                file_paths['folder'][file_path.name] = iteration_list_folder(file_path, last_file, level + 1)
     
     return file_paths
 

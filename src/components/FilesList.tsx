@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import { Button, Drawer, Alert, Tooltip, Divider, Row, Col, Popconfirm } from 'antd';
 import config from '../config'
 
@@ -8,8 +8,8 @@ interface State {
     drawerOpen: boolean,
     drawerLoading: boolean,
     deviceList: JSX.Element,
-    fileName: string
-    filesName: string[]
+    filePath: string
+    filesInfo: {name:string, path:string, type:string}[]
 }
 
 class FilesList extends Component<{}, State> {
@@ -21,8 +21,11 @@ class FilesList extends Component<{}, State> {
             drawerOpen: false,
             drawerLoading: false,
             deviceList: <></>,
-            fileName: "",
-            filesName: ["very_long_long_long_long_long_file_name.mp4", "common_file_name.mp4"]
+            filePath: "",
+            filesInfo: [
+                {name: "very_long_long_long_long_long_file_name.mp4", path: "testpath", type: "file"},
+                {name: "common_file_name.mp4", path: "testpath", type: "file"}
+            ]
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
@@ -43,12 +46,14 @@ class FilesList extends Component<{}, State> {
                 </div>
                 <Divider />
                 
-                {this.state.filesName.map((val, index) => (
+                {this.state.filesInfo.map((val, index) => (
                     <>
                         <Row>
+                            {val.type === 'file'?
+                            <>
                             <Col span={16} style={{textAlign: 'left', textOverflow: 'hiden'}}>
                                 <FileImageOutlined />
-                                {val}
+                                {val.name}
                             </Col>
                             <Col span={4}>
                                 <Popconfirm
@@ -65,6 +70,13 @@ class FilesList extends Component<{}, State> {
                             <Col span={4}>
                                 <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileButtonClick} id={'btn-'+index} />
                             </Col>
+                            </>
+                            :
+                            <Col span={24} style={{textAlign: 'left', textOverflow: 'hiden'}} >
+                                <FolderOpenOutlined />
+                                {val.name}
+                            </Col>
+                            }
                         </Row>
                     </>
                 ))}
@@ -89,7 +101,7 @@ class FilesList extends Component<{}, State> {
         if (e) {
             const btnId = e.currentTarget.id;
             const index = btnId.substring(4);
-            const fileName = this.state.filesName[Number(index)]
+            const fileName = this.state.filesInfo[Number(index)]
             console.log(fileName);
             const response = await fetch(config.host + '/delete', {
                 method: 'POST',
@@ -110,9 +122,9 @@ class FilesList extends Component<{}, State> {
 
         const btnId = e.currentTarget.id;
         const index = btnId.substring(4);
-        const fileName = this.state.filesName[Number(index)];
-        this.setState({fileName: fileName})
-        console.log(fileName);
+        const fileInfo = this.state.filesInfo[Number(index)];
+        this.setState({filePath: fileInfo.path})
+        console.log(fileInfo);
         
     }
 
@@ -151,7 +163,7 @@ class FilesList extends Component<{}, State> {
 
     async onDeviceClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         let url = e.currentTarget.id;
-        let file = this.state.fileName;
+        let file = this.state.filePath;
         console.log(e.currentTarget.innerText);
         console.log(e.currentTarget.id);
 
@@ -174,11 +186,39 @@ class FilesList extends Component<{}, State> {
         this.getFilesName();
     }
 
+    tranverseJson(obj:any, rst: {name:string, path:string, type:string}[], path:string, level = 0) {
+        Object.keys(obj).forEach(key => {
+            if (key === 'file') {
+                let arr = obj[key];
+                if (Array.isArray(arr)) {
+                    arr.forEach(element => {
+                        if (typeof element === "string") {
+                            rst.push({name: '\u00A0\ \u00A0 |'.repeat(level) + element, path: path + '/' + element, type: 'file'});
+                        }
+                    })
+                }
+            }
+            else if (key === 'folder' &&
+                     (typeof obj === 'object' && obj !== null)){
+                this.tranverseJson(obj[key], rst, path, level);
+            }
+            else {
+                rst.push({name: '\u00A0\ \u00A0 |'.repeat(level) + key, path: path + '/' + key, type: 'folder'});
+                this.tranverseJson(obj[key], rst, path + '/' + key, level + 1);
+            }
+        });
+    }
+
     getFilesName = async() =>{
         try {
             const response = await fetch(config.host + '/ls');
-            const result = await response.json();
-            this.setState({filesName: result})
+            const json = await response.json();
+            console.log(json);
+
+            var rst:{name: string, path:string, type:string}[] = [];
+            this.tranverseJson(json, rst, '');
+
+            this.setState({filesInfo: rst});
         }
         catch (error) {
             console.log(error);
