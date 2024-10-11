@@ -59,7 +59,7 @@ def iteration_list_folder(root_folder, last_file = '', level = 0):
                 if 'folder' not in file_paths:
                     file_paths['folder'] = {}
                 file_paths['folder'][file_path.name] = iteration_list_folder(file_path, last_file, level + 1)
-    
+    file_paths['file'].sort()
     return file_paths
 
 @app.route('/go2tv_l', methods=['GET', 'POST'])
