@@ -68,6 +68,9 @@ class FilesList extends Component<{}, State> {
                                 {val.name}
                             </Col>
                             <Col span={4}>
+                                <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileButtonClick} id={'btn-'+index} />
+                            </Col>
+                            <Col span={4}>
                                 <Popconfirm
                                     title="Delete the file"
                                     description="Are you sure to delete this file?"
@@ -79,17 +82,29 @@ class FilesList extends Component<{}, State> {
                                     <Button shape='circle' type='primary' icon={<DeleteOutlined />} danger></Button>
                                 </Popconfirm>
                             </Col>
-                            <Col span={4}>
-                                <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileButtonClick} id={'btn-'+index} />
-                            </Col>
                             </>
                             :
-                            <Col span={24} style={{textAlign: 'left', textOverflow: 'hiden'}} onClick={this.onFolderClicked} id={'folder-'+val.name}>
+                            <>
+                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hiden'}} onClick={this.onFolderClicked} id={'folder-'+val.name}>
                                 <FolderOpenOutlined />
                                 {val.name}
                             </Col>
+                            <Col span={4}>
+                                <Popconfirm
+                                    title="Delete the file"
+                                    description="Are you sure to delete this file?"
+                                    onConfirm={this.onFileDeleteConfirm}
+                                    okText="Yes"
+                                    cancelText="No"
+                                    okButtonProps={{id: 'del-'+index}}
+                                >
+                                    <Button shape='circle' type='primary' icon={<DeleteOutlined />} danger></Button>
+                                </Popconfirm>
+                            </Col>
+                            </>
                             }
                         </Row>
+                        <Divider />
                     </>
                 ))}
 
@@ -115,13 +130,21 @@ class FilesList extends Component<{}, State> {
             const index = btnId.substring(4);
             const fileName = this.state.filesInfo[Number(index)]
             console.log(fileName);
-            const response = await fetch(config.host + '/delete', {
-                method: 'POST',
-                headers: new Headers({'Content-Type': 'application/json'}),
-                body: JSON.stringify({file: fileName})
-            })
+            try {
+                const response = await fetch(config.host + '/delete', {
+                    method: 'POST',
+                    headers: new Headers({'Content-Type': 'application/json'}),
+                    body: JSON.stringify({file: fileName.path})
+                })
+    
+                console.log(await response.text());
 
-            console.log(await response.text());
+                this.onRefreshButtonClick();
+            }
+            catch(error) {
+                console.log(error);
+                // TODO: handle the error
+            }            
         }
     }
 

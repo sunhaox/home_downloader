@@ -177,7 +177,12 @@ def delete_file():
         
         fileName = json_data['file']
         
-        os.remove(root_folder + fileName)
+        # TODO: handle the error
+        if os.path.isfile(root_folder + fileName):
+            os.remove(root_folder + fileName)
+        elif os.path.isdir(root_folder + fileName):
+            os.rmdir(root_folder + fileName)
+        
         return ''
     else:
         raw_data = request.get_data(as_text=True)
