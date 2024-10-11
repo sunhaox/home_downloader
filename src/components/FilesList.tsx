@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { Button, Drawer, Alert, Tooltip, Divider, Row, Col, Popconfirm } from 'antd';
 import config from '../config'
 
@@ -9,7 +9,8 @@ interface State {
     drawerLoading: boolean,
     deviceList: JSX.Element,
     filePath: string
-    filesInfo: {name:string, path:string, type:string}[]
+    filesInfo: {name:string, path:string, type:string}[],
+    folder: string[]
 }
 
 class FilesList extends Component<{}, State> {
@@ -25,7 +26,8 @@ class FilesList extends Component<{}, State> {
             filesInfo: [
                 {name: "very_long_long_long_long_long_file_name.mp4", path: "testpath", type: "file"},
                 {name: "common_file_name.mp4", path: "testpath", type: "file"}
-            ]
+            ],
+            folder: ['/']
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
@@ -34,12 +36,22 @@ class FilesList extends Component<{}, State> {
         this.onDevicesRefreshButtonClick = this.onDevicesRefreshButtonClick.bind(this);
         this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this);
         this.onFileDeleteConfirm = this.onFileDeleteConfirm.bind(this);
+        this.onFolderClicked = this.onFolderClicked.bind(this);
+        this.onBackButtonClick = this.onBackButtonClick.bind(this);
     }
 
     render() {
         return (
             <>
                 <div className='FilesList-header'>
+                    <div style={{textAlign:'left'}}>
+                        {this.state.folder.map((val, index) => (
+                            val + '/'
+                        ))}
+                    </div>
+                    <Tooltip title="back">
+                        <Button type="primary" shape="circle" icon={<ArrowLeftOutlined />} onClick={this.onBackButtonClick} />
+                    </Tooltip>
                     <Tooltip title="refresh">
                         <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} />
                     </Tooltip>
@@ -72,7 +84,7 @@ class FilesList extends Component<{}, State> {
                             </Col>
                             </>
                             :
-                            <Col span={24} style={{textAlign: 'left', textOverflow: 'hiden'}} >
+                            <Col span={24} style={{textAlign: 'left', textOverflow: 'hiden'}} onClick={this.onFolderClicked} id={'folder-'+val.name}>
                                 <FolderOpenOutlined />
                                 {val.name}
                             </Col>
@@ -161,6 +173,33 @@ class FilesList extends Component<{}, State> {
         this.setState({drawerLoading: false})
     }
 
+    onBackButtonClick() {
+        let folder = this.state.folder;
+        folder.pop();
+        this.setState({folder: folder});
+        
+        let path = '';
+        folder.forEach(function(element) {
+            path+= '/' + element;
+        })
+        this.getFilesName(path);
+    }
+
+    onFolderClicked(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        let id = e.currentTarget.id;
+        let path = id.substring(7);
+        console.log(path);
+        let folder = this.state.folder;
+        folder.push(path);
+        this.setState({folder: folder});
+
+        let pathStr = '';
+        folder.forEach(function(element) {
+            pathStr+= '/' + element;
+        })
+        this.getFilesName(pathStr);
+    }
+
     async onDeviceClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         let url = e.currentTarget.id;
         let file = this.state.filePath;
@@ -182,41 +221,45 @@ class FilesList extends Component<{}, State> {
     }
 
     onRefreshButtonClick() {
-        // TODO get json and update
-        this.getFilesName();
+        let folder = '';
+        this.state.folder.forEach(function(element) {
+            folder+= '/' + element;
+        })
+        this.getFilesName(folder);
     }
 
-    tranverseJson(obj:any, rst: {name:string, path:string, type:string}[], path:string, level = 0) {
-        Object.keys(obj).forEach(key => {
-            if (key === 'file') {
-                let arr = obj[key];
-                if (Array.isArray(arr)) {
-                    arr.forEach(element => {
-                        if (typeof element === "string") {
-                            rst.push({name: '\u00A0\ \u00A0 |'.repeat(level) + element, path: path + '/' + element, type: 'file'});
-                        }
-                    })
+    tranverseJson(obj:any, rst: {name:string, path:string, type:string}[]) {
+        let path = obj['path']
+        let folders = obj['folders'];
+        if (Array.isArray(folders)) {
+            folders.forEach(element => {
+                if (typeof element === "string") {
+                    rst.push({name: element, path: path + '/' + element, type: 'folder'});
                 }
-            }
-            else if (key === 'folder' &&
-                     (typeof obj === 'object' && obj !== null)){
-                this.tranverseJson(obj[key], rst, path, level);
-            }
-            else {
-                rst.push({name: '\u00A0\ \u00A0 |'.repeat(level) + key, path: path + '/' + key, type: 'folder'});
-                this.tranverseJson(obj[key], rst, path + '/' + key, level + 1);
-            }
-        });
+            })
+        }
+        let files = obj['files'];
+        if (Array.isArray(files)) {
+            files.forEach(element => {
+                if (typeof element === "string") {
+                    rst.push({name: element, path: path + '/' + element, type: 'file'});
+                }
+            })
+        }
     }
 
-    getFilesName = async() =>{
+    getFilesName = async(folder:string) =>{
         try {
-            const response = await fetch(config.host + '/ls');
+            const response = await fetch(config.host + '/ls', {
+                method: 'POST',
+                headers: new Headers({'Content-Type': 'application/json'}),
+                body: JSON.stringify({folder: folder})
+            });
             const json = await response.json();
             console.log(json);
 
             var rst:{name: string, path:string, type:string}[] = [];
-            this.tranverseJson(json, rst, '');
+            this.tranverseJson(json, rst);
 
             this.setState({filesInfo: rst});
         }

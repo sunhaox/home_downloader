@@ -36,30 +36,45 @@ def list_files():
     with open('config.json', 'r') as ifile:
         data = json.load(ifile)
         last_file = data['recent']
+        
+    if request.is_json:
+        json_data = request.get_json()
+        
+        folder = json_data['folder']
     
-    file_paths = iteration_list_folder(root_folder, last_file)
+        file_paths = get_files_and_folders(root_folder + folder, last_file)
+        
+        return file_paths
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+    return "123"
     
-    # sort the array
-    # file_paths.sort()
     
-    return file_paths
 
-def iteration_list_folder(root_folder, last_file = '', level = 0):
+def get_files_and_folders(folder, last_file = ''):
     file_paths = {}
-    file_paths['file'] = []
+    file_paths['files'] = []
+    file_paths['folders'] = []
     
-    with os.scandir(root_folder) as entries:
+    if folder.startswith(root_folder):
+        path = folder[len(root_folder):]
+    else:
+        path = folder
+    file_paths['path'] = path
+    
+    with os.scandir(folder) as entries:
         for file_path in entries:
             if file_path.is_file():
                 if (file_path == last_file):
-                    file_paths['file'].append(file_path.name + "*")
+                    file_paths['files'].append(file_path.name + "*")
                 else:
-                    file_paths['file'].append(file_path.name)
+                    file_paths['files'].append(file_path.name)
             else:
-                if 'folder' not in file_paths:
-                    file_paths['folder'] = {}
-                file_paths['folder'][file_path.name] = iteration_list_folder(file_path, last_file, level + 1)
-    file_paths['file'].sort()
+                file_paths['folders'].append(file_path.name)
+    
+    file_paths['files'].sort()
+    file_paths['folders'].sort()
     return file_paths
 
 @app.route('/go2tv_l', methods=['GET', 'POST'])
