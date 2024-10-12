@@ -38,6 +38,8 @@ class FilesList extends Component<{}, State> {
         this.onFileDeleteConfirm = this.onFileDeleteConfirm.bind(this);
         this.onFolderClicked = this.onFolderClicked.bind(this);
         this.onBackButtonClick = this.onBackButtonClick.bind(this);
+
+        this.onRefreshButtonClick();
     }
 
     render() {
