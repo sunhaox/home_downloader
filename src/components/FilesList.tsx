@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './FilesList.css';
 import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { Button, Drawer, Alert, Tooltip, Divider, Row, Col, Popconfirm } from 'antd';
+import { Button, Drawer, Alert, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress } from 'antd';
 import config from '../config'
 
 interface State {
@@ -10,7 +10,8 @@ interface State {
     deviceList: JSX.Element,
     filePath: string
     filesInfo: {name:string, path:string, type:string}[],
-    folder: string[]
+    folder: string[],
+    storageInfo: {used: string, total: string, persent: number}
 }
 
 class FilesList extends Component<{}, State> {
@@ -27,7 +28,8 @@ class FilesList extends Component<{}, State> {
                 {name: "very_long_long_long_long_long_file_name.mp4", path: "testpath", type: "file"},
                 {name: "common_file_name.mp4", path: "testpath", type: "file"}
             ],
-            folder: ['/']
+            folder: ['/'],
+            storageInfo: {used: 'none', total: 'none', persent: 0}
         }
 
         this.onDrawerClose = this.onDrawerClose.bind(this);
@@ -38,14 +40,20 @@ class FilesList extends Component<{}, State> {
         this.onFileDeleteConfirm = this.onFileDeleteConfirm.bind(this);
         this.onFolderClicked = this.onFolderClicked.bind(this);
         this.onBackButtonClick = this.onBackButtonClick.bind(this);
+        this.onRefreshStorageUsedInfo = this.onRefreshStorageUsedInfo.bind(this);
 
         this.onRefreshButtonClick();
+        this.onRefreshStorageUsedInfo();
     }
 
     render() {
         return (
             <>
                 <div className='FilesList-header'>
+                    <Flex gap="small" vertical> 
+                        <Progress percent={this.state.storageInfo.persent} />
+                        Used: {this.state.storageInfo.used} Total: {this.state.storageInfo.total}
+                    </Flex>
                     <div style={{textAlign:'left'}}>
                         {this.state.folder.map((val, index) => (
                             val + '/'
@@ -196,6 +204,25 @@ class FilesList extends Component<{}, State> {
         }
 
         this.setState({drawerLoading: false})
+    }
+
+    onRefreshStorageUsedInfo = async() => {
+        try {
+            const response = await fetch(config.host + '/df');
+            const result = await response.text();
+            try{
+                const json = JSON.parse(result);                
+                this.setState({storageInfo: {total: json.total, used: json.used, persent: json.persent}})
+            }
+            catch(error) {
+                // TODO
+                console.log(error);
+            }
+        }
+        catch (error) {
+            // TODO
+            console.log(error);
+        }
     }
 
     onBackButtonClick() {

@@ -49,8 +49,6 @@ def list_files():
         raw_data = request.get_data(as_text=True)
         print(raw_data)
     return "123"
-    
-    
 
 def get_files_and_folders(folder, last_file = ''):
     file_paths = {}
@@ -150,6 +148,33 @@ def shell_go2tv_s():
         print(raw_data)
     return "123"
 
+@app.route('/df', methods=['GET', 'POST'])
+def shell_df():
+    sdx = ''
+    with open('config.json', 'r') as ifile:
+        data = json.load(ifile)
+        sdx = data['sdx']
+    
+    result = subprocess.run(['df', '-h'], capture_output=True, text=True)
+    output = result.stdout
+
+    if result.stderr:
+        output = result.stderr
+        return output
+    
+    str_list = output.split('\n')
+    for str in str_list:
+        if str.startswith(sdx):
+            match = re.search(r'\S+\s+(\S+)\s+(\S+)\s+\S+\s+(\S+)\s+\S+', str)
+            if match:
+                total = match.group(1)
+                used = match.group(2)
+                persent = match.group(3)
+                persent = int(persent[:-1])
+                return {'total': total, 'used': used, 'persent': persent}
+    
+    return {'total': 'x', 'used': 'x', 'persent': 0}
+
 @app.route('/kill', methods=['GET', 'POST'])
 def shell_kill():
     if request.is_json:
@@ -197,6 +222,7 @@ if __name__ == '__main__':
         data = {}
         data['recent'] = ''
         data['root'] = '/storage/media/'
+        data['sdx'] = '/dev/sda1'
         with open('config.json', 'w') as ofile:
             json.dump(data, ofile, indent=4)
     else:
