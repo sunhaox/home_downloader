@@ -28,7 +28,7 @@ class FilesList extends Component<{}, State> {
                 {name: "very_long_long_long_long_long_file_name.mp4", path: "testpath", type: "file"},
                 {name: "common_file_name.mp4", path: "testpath", type: "file"}
             ],
-            folder: ['/'],
+            folder: [],
             storageInfo: {used: 'none', total: 'none', persent: 0}
         }
 
@@ -55,9 +55,9 @@ class FilesList extends Component<{}, State> {
                         Used: {this.state.storageInfo.used} Total: {this.state.storageInfo.total}
                     </Flex>
                     <div style={{textAlign:'left'}}>
-                        {this.state.folder.map((val, index) => (
-                            val + '/'
-                        ))}
+                        {this.state.folder.length?this.state.folder.map((val, index) => (
+                            '/' + val
+                        )): '/'}
                     </div>
                     <Tooltip title="back">
                         <Button type="primary" shape="circle" icon={<ArrowLeftOutlined />} onClick={this.onBackButtonClick} />
