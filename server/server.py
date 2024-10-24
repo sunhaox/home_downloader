@@ -9,210 +9,143 @@ app = Flask(__name__)
 CORS(app)
 
 
-root_folder = ''
+db_json_file_path = ''
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
 
-@app.route('/ps', methods=['GET', 'POST'])
-def shell_ps():
-    result = subprocess.run(['ps', '-C', 'go2tv'], capture_output=True, text=True)
-    output = result.stdout
-
-    if result.stderr:
-        output = result.stderr
-        return output
+@app.route('/read_json', methods=['GET', 'POST'])
+def read_json():
+    if not os.path.exists(db_json_file_path):
+        return {'rst': False, 'error': 'DB file not exist!'}
     
-    pid_pattern = re.compile(r'\s+(\d+)\s')
+    error = ''
+    try:
+        with open(db_json_file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            return {'rst': True, 'data': data}
+    except FileNotFoundError:
+        error = f'Can not find file {db_json_file_path}.'
+    except Exception as e:
+        error = f"Error happened when reading: {e}"
+    return {'rst': False, 'error': error}
 
-    output = pid_pattern.findall(output)
-    return output
-
-@app.route('/ls', methods=['GET', 'POST'])
-def list_files():
-    last_file = ''
-    with open('config.json', 'r') as ifile:
-        data = json.load(ifile)
-        last_file = data['recent']
-        
-    if request.is_json:
-        json_data = request.get_json()
-        
-        folder = json_data['folder']
-    
-        file_paths = get_files_and_folders(root_folder + folder, last_file)
-        
-        return file_paths
-    else:
-        raw_data = request.get_data(as_text=True)
-        print(raw_data)
-    return "123"
-
-def get_files_and_folders(folder, last_file = ''):
-    file_paths = {}
-    file_paths['files'] = []
-    file_paths['folders'] = []
-    
-    if folder.startswith(root_folder):
-        path = folder[len(root_folder):]
-    else:
-        path = folder
-    file_paths['path'] = path
-    
-    with os.scandir(folder) as entries:
-        for file_path in entries:
-            if file_path.is_file():
-                if (file_path == last_file):
-                    file_paths['files'].append(file_path.name + "*")
-                else:
-                    file_paths['files'].append(file_path.name)
-            else:
-                file_paths['folders'].append(file_path.name)
-    
-    file_paths['files'].sort()
-    file_paths['folders'].sort()
-    return file_paths
-
-@app.route('/go2tv_l', methods=['GET', 'POST'])
-def shell_go2tv_l():
-    result = subprocess.run(['go2tv', '-l'], capture_output=True, text=True)
-    output = result.stdout
-    
-    '''
-    Device 1
-    --------
-    Model: 咪咕投屏-20F
-    URL:   http://192.168.1.5:53141/upnp/dev/a003a3a7de2f31af96041aac27414292/desc
-
-    Device 2
-    --------
-    Model: 魔百和_11820F
-    URL:   http://192.168.1.5:25826/description.xml
-    '''
-
-    if result.stderr:
-        output = result.stderr
-        return output
-    else:
-        pattern = r'Model: (.*)\nURL:\s+(.*)'
-        
-        # There are some invisible chars need to remove first
-        sub1_chr = [chr(27), chr(91), chr(48), chr(109)]
-        sub1_str = ''.join((chr) for chr in sub1_chr)
-        
-        sub2_chr = [chr(27), chr(91), chr(49), chr(109)]
-        sub2_str = ''.join((chr) for chr in sub2_chr)
-        
-        output = output.replace(sub1_str, '')
-        output = output.replace(sub2_str, '')
-
-        matches = re.findall(pattern, output)
-        output = {'devices': []}
-
-        for match in matches:
-            output['devices'].append({'model': match[0], 'URL': match[1]})
-
-    print(output)
-    return output
-    # For test
-    # return {"devices": [
-    #     {'model': 'models1', 'url': 'http://example.com/xml'},
-    #     {'model': 'models2', 'url': 'http://example.com/xml'}
-    # ]}
-
-@app.route('/go2tv_s', methods=['GET', 'POST'])
-def shell_go2tv_s():
+@app.route('/test_show_info', methods=['GET', 'POST'])
+def test_show_info():
     if request.is_json:
         json_data = request.get_json()
         
         url = json_data['url']
-        fileName = json_data['filename']
-        filePath = root_folder + fileName
-    
-        completion = subprocess.Popen(['go2tv', '-t', url, '-v', filePath], shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        name = json_data['name']
         
-        # store the filename in config file
-        with open('config.json', 'r') as ifile:
-            data = json.load(ifile)
-            
-            data['recent'] = fileName
-            
-            with open('config.json', 'w') as ofile:
-                json.dump(data, ofile, indent=4)
- 
-        return str(completion.pid)
+        # TODO Return value
+        return {
+            'rst': True,
+            'data': {
+                'name': name,
+                'url': url,
+                'list': {
+                    'ep1': {
+                        'name': 'ep1',
+                        'url': 'test.url.com/ep1',
+                        'media': 'test.url.com/ep1.m3u8'
+                    },
+                    'ep2': {
+                        'name': 'ep2',
+                        'url': 'test.url.com/ep1',
+                        'media': 'test.url.com/ep1.m3u8'
+                    }
+                }
+            }
+        }
     else:
         raw_data = request.get_data(as_text=True)
         print(raw_data)
-    return "123"
+    return {'rst': False, 'error': 'should be json format'}
 
-@app.route('/df', methods=['GET', 'POST'])
-def shell_df():
-    sdx = ''
-    with open('config.json', 'r') as ifile:
-        data = json.load(ifile)
-        sdx = data['sdx']
+@app.route('/submit_show_info', methods=['GET', 'POST'])
+def submit_show_info():
+    if request.is_json:
+        json_data = request.get_json()
+        error = ''
+        
+        if not os.path.exists(db_json_file_path):
+            try:
+                with open(db_json_file_path, 'w', encoding='utf-8') as file:
+                    json.dump([], file, indent=4, ensure_ascii=False)
+            except Exception as e:
+                error = f"Error happened when creating db {db_json_file_path}: {e}"
+        
+        if error != '':
+            return {'rst': False, 'error': error}
+        
+        data = []
+        try:
+            with open(db_json_file_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                data.append(json_data)
+        except FileNotFoundError:
+            error = f'Can not find file {db_json_file_path}.'
+        except Exception as e:
+            error = f"Error happened when reading: {e}"
+        
+        if error != '':
+            return {'rst': False, 'error': error}
     
-    result = subprocess.run(['df', '-h'], capture_output=True, text=True)
-    output = result.stdout
+        try:
+            with open(db_json_file_path, 'w', encoding='utf-8') as file:
+                json.dump(data, file, indent=4, ensure_ascii=False)
+                return {'rst': True, 'data': ''}
+        except FileNotFoundError:
+            error = f'Can not find file {db_json_file_path}.'
+        except Exception as e:
+            error = f"Error happened when writing: {e}"
+        return {'rst': False, 'error': error}
 
-    if result.stderr:
-        output = result.stderr
-        return output
-    
-    str_list = output.split('\n')
-    for str in str_list:
-        if str.startswith(sdx):
-            match = re.search(r'\S+\s+(\S+)\s+(\S+)\s+\S+\s+(\S+)\s+\S+', str)
-            if match:
-                total = match.group(1)
-                used = match.group(2)
-                persent = match.group(3)
-                persent = int(persent[:-1])
-                return {'total': total, 'used': used, 'persent': persent}
-    
-    return {'total': 'x', 'used': 'x', 'persent': 0}
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+    return {'rst': False, 'error': 'should be json format'}
 
-@app.route('/kill', methods=['GET', 'POST'])
-def shell_kill():
+@app.route('/delete_json', methods=['GET', 'POST'])
+def delete_json():
     if request.is_json:
         json_data = request.get_json()
         
-        pid = json_data['pid']
+        if not os.path.exists(db_json_file_path):
+            return {'rst': False, 'error': 'DB file not exist!'}
+        
+        error = ''
+        data = []
+        try:
+            with open(db_json_file_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+        except FileNotFoundError:
+            error = f'Can not find file {db_json_file_path}.'
+        except Exception as e:
+            error = f"Error happened when reading: {e}"
+        
+        if error != '':
+            return {'rst': False, 'error': error}
     
-        result = subprocess.run(['kill', pid], capture_output=True, text=True)
-        output = result.stdout
+        new_data = [x for x in data if x['name'] != json_data['name']]
 
-        if result.stderr:
-            output = result.stderr
-            return output
-        
-        return output
+        try:
+            with open(db_json_file_path, 'w', encoding='utf-8') as file:
+                json.dump(new_data, file, indent=4, ensure_ascii=False)
+                return {'rst': True, 'data': ''}
+        except FileNotFoundError:
+            error = f'Can not find file {db_json_file_path}.'
+        except Exception as e:
+            error = f"Error happened when writing: {e}"
+        return {'rst': False, 'error': error}
+
     else:
         raw_data = request.get_data(as_text=True)
         print(raw_data)
-    return "123"
-
-@app.route('/delete', methods=['GET', 'POST'])
-def delete_file():
-    if request.is_json:
-        json_data = request.get_json()
-        
-        fileName = json_data['file']
-        
-        # TODO: handle the error
-        if os.path.isfile(root_folder + fileName):
-            os.remove(root_folder + fileName)
-        elif os.path.isdir(root_folder + fileName):
-            os.rmdir(root_folder + fileName)
-        
-        return ''
-    else:
-        raw_data = request.get_data(as_text=True)
-        print(raw_data)
-        return raw_data
+    return {'rst': False, 'error': 'should be json format'}
 
 if __name__ == '__main__':
     
@@ -220,15 +153,13 @@ if __name__ == '__main__':
     if (not os.path.exists("config.json")):
         # create the config file if not exist
         data = {}
-        data['recent'] = ''
-        data['root'] = '/storage/media/'
-        data['sdx'] = '/dev/sda1'
+        data['db_json'] = 'db.json'
         with open('config.json', 'w') as ofile:
             json.dump(data, ofile, indent=4)
     else:
         with open('config.json', 'r') as ifile:
             data = json.load(ifile)
-            root_folder = data['root']
+            db_json_file_path = data['db_json']
     
     # app.run(debug=True, port=8088)
     server = pywsgi.WSGIServer(('0.0.0.0', 8088), app)

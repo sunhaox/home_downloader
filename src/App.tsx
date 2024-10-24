@@ -1,35 +1,28 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Spin, Tabs, TabsProps } from 'antd';
-import FilesList from './components/FilesList';
-import PlayingList from './components/PlayingList'
+import { Tabs, TabsProps } from 'antd';
+import WatchList from './components/WatchList';
+import AddWidget from './components/AddWidget';
 
-interface State {
-    loading: boolean
-}
-
-class App extends Component<{}, State> {
+class App extends Component<{}, {}> {
 
     items: TabsProps['items'] = [];
 
     constructor(props: {}) {
         super(props);
-        this.state = {
-            loading: false
-        }
 
         this.items = [
             {
                 key: '1',
-                label: 'Files',
+                label: 'Watch List',
                 children: <div>
-                            <FilesList></FilesList>
+                            <WatchList></WatchList>
                         </div>,
             },
             {
                 key: '2',
-                label: 'Playing',
-                children: <><PlayingList></PlayingList></>,
+                label: 'Add',
+                children: <><AddWidget></AddWidget></>,
             }
         ];
     }
@@ -37,12 +30,7 @@ class App extends Component<{}, State> {
     render() {
         return (
             <>
-                <div className='App-loading' style={{ display: this.state.loading ? "block" : 'none' }}>
-                    <Spin tip="Loading">
-                        <div className="content" />
-                    </Spin>
-                </div>
-                <div className="App" style={{ display: this.state.loading ? "none" : 'block' }}>
+                <div className="App">
                     <Tabs defaultActiveKey='1' items={this.items} />
                 </div>
             </>
