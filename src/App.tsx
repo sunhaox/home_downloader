@@ -4,6 +4,7 @@ import { Tabs, TabsProps } from 'antd';
 import WatchList from './components/WatchList';
 import AddWidget from './components/AddWidget';
 import FilesList from './components/FilesList';
+import DownloadWidget from './components/DownloadWidget';
 
 class App extends Component<{}, {}> {
 
@@ -29,6 +30,11 @@ class App extends Component<{}, {}> {
                 key: '3',
                 label: 'Exploer',
                 children: <><FilesList></FilesList></>
+            },
+            {
+                key: '4',
+                label: 'Download',
+                children: <><DownloadWidget></DownloadWidget></>
             }
         ];
     }

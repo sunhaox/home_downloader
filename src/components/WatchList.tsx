@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Collapse, message, Popconfirm } from 'antd';
-import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CopyOutlined, DeleteOutlined, FileSyncOutlined, ReloadOutlined } from '@ant-design/icons';
 import type {CollapseProps, PopconfirmProps} from 'antd';
 import config from '../config'
 
@@ -27,7 +27,6 @@ const WatchList: React.FC = () => {
                 method: 'POST',
                 headers: new Headers({'Content-Type': 'application/json'}),
                 body: JSON.stringify({name: name})
-                // TODO change to real name
             });
             const result = await response.text();
             try{
@@ -84,8 +83,26 @@ const WatchList: React.FC = () => {
         return {
             key: obj['name'],
             label: obj['name'],
-            children: <ul>{list.map((val, index) => <li key={val}>{val}</li>)}</ul>,
-            extra: <Popconfirm
+            children: <><ul>{list.map((val, index) => <li key={val} onClick={() => {
+                // TODO maybe need to check the filed
+                navigator.clipboard.writeText(obj['list'][val]['media'])
+                messageApi.open({
+                    type: 'info',
+                    content: 'web url copied to the clipboard.'
+                })
+            }}>{val}</li>)}</ul></>,
+            extra: <>
+            <CopyOutlined 
+            onClick={(event) => {
+                navigator.clipboard.writeText(obj['url'])
+                messageApi.open({
+                    type: 'info',
+                    content: 'web url copied to the clipboard.'
+                })
+                event.stopPropagation();
+            }}
+            />
+            <Popconfirm
                 title="Delete the file"
                 description="Are you sure to delete this file?"
                 onConfirm={onDeleteConfirmClick}
@@ -98,10 +115,48 @@ const WatchList: React.FC = () => {
                         event.stopPropagation();
                     }}
                 />
-            </Popconfirm>,
+            </Popconfirm>
+            </>,
         }
     }
     
+    const onSyncButtonClick = async() => {
+        try {
+            const response = await fetch(config.host + '/sync');
+            const result = await response.text();
+            try{
+                const json = JSON.parse(result);
+                if (json['rst'] !== true) {
+                    messageApi.open({
+                        type: 'warning',
+                        content: <>Referesh failed: {json['error']}</>
+                    })
+                }
+                else {
+                    messageApi.open({
+                        type: 'info',
+                        content: "Sync may take a long time, please wait."
+                    })
+                }
+
+            }
+            catch(error) {
+                const e = error as Error;
+                messageApi.open({
+                    type: 'error',
+                    content: <>Error happened when processing data: {e.message}</>
+                })
+            }
+        }
+        catch (error) {
+            const e = error as Error;
+            messageApi.open({
+                type: 'error',
+                content: <>Error happened when fetch {config.host + '/sync'}: {e.message}</>
+            })
+        }
+    }
+
     const onRefreshButtonClick = async () => {
         try {
             const response = await fetch(config.host + '/read_json');
@@ -147,6 +202,7 @@ const WatchList: React.FC = () => {
         <>
                     {contextHolder}
                     <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} />
+                    <Button type="primary" shape="circle" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} />
                     <Collapse
                         defaultActiveKey={['1']}
                         onChange={onChange}

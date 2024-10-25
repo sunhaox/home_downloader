@@ -5,6 +5,8 @@ import subprocess
 import os
 from flask_cors import CORS
 from gevent import pywsgi
+import spider
+import download_media
 app = Flask(__name__)
 CORS(app)
 
@@ -41,25 +43,12 @@ def test_show_info():
         url = json_data['url']
         name = json_data['name']
         
-        # TODO Return value
+        rst = spider.test(url)
+        rst['name'] = name
+
         return {
             'rst': True,
-            'data': {
-                'name': name,
-                'url': url,
-                'list': {
-                    'ep1': {
-                        'name': 'ep1',
-                        'url': 'test.url.com/ep1',
-                        'media': 'test.url.com/ep1.m3u8'
-                    },
-                    'ep2': {
-                        'name': 'ep2',
-                        'url': 'test.url.com/ep1',
-                        'media': 'test.url.com/ep1.m3u8'
-                    }
-                }
-            }
+            'data': rst
         }
     else:
         raw_data = request.get_data(as_text=True)
@@ -148,6 +137,31 @@ def delete_json():
         print(raw_data)
     return {'rst': False, 'error': 'should be json format'}
 
+@app.route('/media_dl', methods=['GET', 'POST'])
+def media_dl():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        url = json_data['url']
+        name = json_data['name']
+        
+        rst = download_media.download_media(name, url, 10)
+        
+        if rst:
+            return {'rst': True}
+        else:
+            return {'rst': False, 'error': 'download error'}
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+        return {'rst': False, 'error': 'should be json format'}
+    
+@app.route('/sync', methods=['GET', 'POST'])
+def sync():
+    spider.fetch()
+    # TODO update result
+    return {'rst': True}
+    
 @app.route('/ls', methods=['GET', 'POST'])
 def list_files():
         
