@@ -3,6 +3,7 @@ import './App.css';
 import { Tabs, TabsProps } from 'antd';
 import WatchList from './components/WatchList';
 import AddWidget from './components/AddWidget';
+import FilesList from './components/FilesList';
 
 class App extends Component<{}, {}> {
 
@@ -23,6 +24,11 @@ class App extends Component<{}, {}> {
                 key: '2',
                 label: 'Add',
                 children: <><AddWidget></AddWidget></>,
+            },
+            {
+                key: '3',
+                label: 'Exploer',
+                children: <><FilesList></FilesList></>
             }
         ];
     }

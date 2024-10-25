@@ -10,6 +10,7 @@ CORS(app)
 
 
 db_json_file_path = ''
+root_folder = '/storage/media/'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -147,6 +148,91 @@ def delete_json():
         print(raw_data)
     return {'rst': False, 'error': 'should be json format'}
 
+@app.route('/ls', methods=['GET', 'POST'])
+def list_files():
+        
+    if request.is_json:
+        json_data = request.get_json()
+        
+        folder = json_data['folder']
+    
+        file_paths = get_files_and_folders(root_folder + folder)
+        
+        return {'rst': True, 'data': file_paths}
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+        return {'rst': False, 'error': 'should be json format'}
+
+def get_files_and_folders(folder, last_file = ''):
+    file_paths = {}
+    file_paths['files'] = []
+    file_paths['folders'] = []
+    
+    if folder.startswith(root_folder):
+        path = folder[len(root_folder):]
+    else:
+        path = folder
+    file_paths['path'] = path
+    
+    with os.scandir(folder) as entries:
+        for file_path in entries:
+            if file_path.is_file():
+                if (file_path == last_file):
+                    file_paths['files'].append(file_path.name + "*")
+                else:
+                    file_paths['files'].append(file_path.name)
+            else:
+                file_paths['folders'].append(file_path.name)
+    
+    file_paths['files'].sort()
+    file_paths['folders'].sort()
+    return file_paths
+
+@app.route('/df', methods=['GET', 'POST'])
+def shell_df():
+    sdx = ''
+    with open('config.json', 'r') as ifile:
+        data = json.load(ifile)
+        sdx = data['sdx']
+    
+    result = subprocess.run(['df', '-h'], capture_output=True, text=True)
+    output = result.stdout
+
+    if result.stderr:
+        output = result.stderr
+        return {'rst': False, 'error': output}
+    
+    str_list = output.split('\n')
+    for str in str_list:
+        if str.startswith(sdx):
+            match = re.search(r'\S+\s+(\S+)\s+(\S+)\s+\S+\s+(\S+)\s+\S+', str)
+            if match:
+                total = match.group(1)
+                used = match.group(2)
+                persent = match.group(3)
+                persent = int(persent[:-1])
+                return {'rst': True, 'data': {'total': total, 'used': used, 'persent': persent}}
+    
+    return {'rst': True, 'data': {'total': 'x', 'used': 'x', 'persent': 0}}
+
+@app.route('/delete', methods=['GET', 'POST'])
+def delete_file():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        fileName = json_data['file']
+        
+        if os.path.isfile(root_folder + fileName):
+            os.remove(root_folder + fileName)
+        elif os.path.isdir(root_folder + fileName):
+            os.rmdir(root_folder + fileName)
+        
+        return {'rst': True}
+    else:
+        raw_data = request.get_data(as_text=True)
+        return {'rst': False, 'error': 'should be json format'}
+    
 if __name__ == '__main__':
     
     # check the config file
@@ -154,12 +240,15 @@ if __name__ == '__main__':
         # create the config file if not exist
         data = {}
         data['db_json'] = 'db.json'
+        data['sdx'] = '/dev/sdb1'
+        data['root'] = '/storage/media/'
         with open('config.json', 'w') as ofile:
             json.dump(data, ofile, indent=4)
     else:
         with open('config.json', 'r') as ifile:
             data = json.load(ifile)
             db_json_file_path = data['db_json']
+            root_folder = data['root']
     
     # app.run(debug=True, port=8088)
     server = pywsgi.WSGIServer(('0.0.0.0', 8088), app)

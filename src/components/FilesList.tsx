@@ -1,29 +1,20 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined, PlayCircleOutlined, ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { Button, Drawer, Alert, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress } from 'antd';
+import { FileImageOutlined,  ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress, message } from 'antd';
 import config from '../config'
 
 interface State {
-    drawerOpen: boolean,
-    drawerLoading: boolean,
-    deviceList: JSX.Element,
-    filePath: string
     filesInfo: {name:string, path:string, type:string}[],
     folder: string[],
     storageInfo: {used: string, total: string, persent: number}
 }
 
 class FilesList extends Component<{}, State> {
-
     constructor(props: {}) {
         super(props);
 
         this.state = {
-            drawerOpen: false,
-            drawerLoading: false,
-            deviceList: <></>,
-            filePath: "",
             filesInfo: [
                 {name: "very_long_long_long_long_long_file_name.mp4", path: "testpath", type: "file"},
                 {name: "common_file_name.mp4", path: "testpath", type: "file"}
@@ -32,10 +23,6 @@ class FilesList extends Component<{}, State> {
             storageInfo: {used: 'none', total: 'none', persent: 0}
         }
 
-        this.onDrawerClose = this.onDrawerClose.bind(this);
-        this.onFileButtonClick = this.onFileButtonClick.bind(this);
-        this.onDeviceClick = this.onDeviceClick.bind(this);
-        this.onDevicesRefreshButtonClick = this.onDevicesRefreshButtonClick.bind(this);
         this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this);
         this.onFileDeleteConfirm = this.onFileDeleteConfirm.bind(this);
         this.onFolderClicked = this.onFolderClicked.bind(this);
@@ -73,12 +60,9 @@ class FilesList extends Component<{}, State> {
                         <Row>
                             {val.type === 'file'?
                             <>
-                            <Col span={16} style={{textAlign: 'left', textOverflow: 'hiden'}}>
+                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hiden'}}>
                                 <FileImageOutlined />
                                 {val.name}
-                            </Col>
-                            <Col span={4}>
-                                <Button type="primary" shape="circle" icon={<PlayCircleOutlined />} onClick={this.onFileButtonClick} id={'btn-'+index} />
                             </Col>
                             <Col span={4}>
                                 <Popconfirm
@@ -118,18 +102,6 @@ class FilesList extends Component<{}, State> {
                     </>
                 ))}
 
-                <Drawer
-                    title="Choose the device"
-                    placement={"top"}
-                    closable={false}
-                    onClose={this.onDrawerClose}
-                    open={this.state.drawerOpen}
-                    loading={this.state.drawerLoading}
-                    key={"top"}
-                >
-                    <Button type='primary' shape='circle' icon={<ReloadOutlined />} onClick={this.onDevicesRefreshButtonClick}></Button>
-                    {this.state.deviceList}
-                </Drawer>
             </>
         );
     }
@@ -147,63 +119,26 @@ class FilesList extends Component<{}, State> {
                     body: JSON.stringify({file: fileName.path})
                 })
     
-                console.log(await response.text());
+                const result = await response.text();
+                try{
+                    const json = JSON.parse(result);
+                    if (json['rst'] === true) {
+                        message.success('File deleted succefully.')
+                    }
+                    else {
+                        message.error(<>Delete file failed: {json['error']}</>)
+                    }
+                }
+                catch(error) {
+                    message.error(<>Error happened when processing delete data: {error}</>)
+                }
 
                 this.onRefreshButtonClick();
             }
             catch(error) {
-                console.log(error);
-                // TODO: handle the error
+                message.error(<>Error happened when fetch {config.host}/delete: {error}</>)
             }            
         }
-    }
-
-    onDrawerClose() {
-        this.setState({drawerOpen: false})
-    }
-
-    onFileButtonClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        this.setState({drawerOpen: true})
-
-        const btnId = e.currentTarget.id;
-        const index = btnId.substring(4);
-        const fileInfo = this.state.filesInfo[Number(index)];
-        this.setState({filePath: fileInfo.path})
-        console.log(fileInfo);
-        
-    }
-
-    onDevicesRefreshButtonClick = async() =>{
-        this.setState({drawerLoading: true})
-        try {
-            const response = await fetch(config.host + '/go2tv_l');
-            const result = await response.text();
-            try{
-                const json = JSON.parse(result);
-                let deviceListElements = [];
-                
-                for( let i = 0; i < json['devices'].length; i++) {
-                    deviceListElements.push(<p onClick={this.onDeviceClick} id={json['devices'][i]['URL']}>{json['devices'][i]['model']}</p>)
-                }
-
-                const rst = <>{deviceListElements}</>
-                this.setState({deviceList: rst})
-            }
-            catch(error) {
-                this.setState({deviceList: <>
-                    <Alert message={result} type="error" />
-                    <Alert message={String(error)} type="error" />
-                </>})
-            }
-        }
-        catch (error) {
-            const errorString = String(error);
-            this.setState({deviceList: <>
-                <Alert message={errorString} type="error" />
-            </>})
-        }
-
-        this.setState({drawerLoading: false})
     }
 
     onRefreshStorageUsedInfo = async() => {
@@ -211,17 +146,20 @@ class FilesList extends Component<{}, State> {
             const response = await fetch(config.host + '/df');
             const result = await response.text();
             try{
-                const json = JSON.parse(result);                
-                this.setState({storageInfo: {total: json.total, used: json.used, persent: json.persent}})
+                const json = JSON.parse(result);
+                if (json['rst'] === true) {
+                    this.setState({storageInfo: {total: json['data'].total, used: json['data'].used, persent: json['data'].persent}})
+                }
+                else {
+                    message.error(<>Get storeage used info failed: {json['error']}</>)
+                }
             }
             catch(error) {
-                // TODO
-                console.log(error);
+                message.error(<>Error happened when processing storage used info data: {error}</>)
             }
         }
         catch (error) {
-            // TODO
-            console.log(error);
+            message.error(<>Error happened fetch from {config.host}/df: {error}</>)
         }
     }
 
@@ -250,26 +188,6 @@ class FilesList extends Component<{}, State> {
             pathStr+= '/' + element;
         })
         this.getFilesName(pathStr);
-    }
-
-    async onDeviceClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        let url = e.currentTarget.id;
-        let file = this.state.filePath;
-        console.log(e.currentTarget.innerText);
-        console.log(e.currentTarget.id);
-
-        try {
-            const response = await fetch(config.host + '/go2tv_s', {
-                method: 'POST',
-                headers: new Headers({'Content-Type': 'application/json'}),
-                body: JSON.stringify({filename: file, url: url})
-            })
-
-            console.log(await response.text());
-        }
-        catch(error) {
-            console.log(error);
-        }
     }
 
     onRefreshButtonClick() {
@@ -309,14 +227,18 @@ class FilesList extends Component<{}, State> {
             });
             const json = await response.json();
             console.log(json);
+            if (json['rst'] === true) {
+                var rst:{name: string, path:string, type:string}[] = [];
+                this.tranverseJson(json['data'], rst);
 
-            var rst:{name: string, path:string, type:string}[] = [];
-            this.tranverseJson(json, rst);
-
-            this.setState({filesInfo: rst});
+                this.setState({filesInfo: rst});
+            }
+            else {
+                message.error(json['error'])
+            }
         }
         catch (error) {
-            console.log(error);
+            message.error(<>Error happened when fetch {config.host}/ls: {error}</>)
         }
     }
 }
