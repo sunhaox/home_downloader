@@ -139,13 +139,21 @@ def delete_json():
 
 @app.route('/media_dl', methods=['GET', 'POST'])
 def media_dl():
+    global root_folder
     if request.is_json:
         json_data = request.get_json()
         
         url = json_data['url']
         name = json_data['name']
+        path = json_data['path']
         
-        rst = download_media.download_media(name, url, 10)
+        if not name.endswith('.mp4'):
+            return {'rst': False, 'error': 'media type should be mp4'}
+        
+        if (os.path.exists(root_folder + '/' + path + '/' + name)):
+            return {'rst': False, 'error': f'file {root_folder}/{path}/{name} exist!'}
+        
+        rst = download_media.download_media(root_folder + '/' +path+'/'+name, url, 1)
         
         if rst:
             return {'rst': True}
@@ -161,10 +169,10 @@ def sync():
     spider.fetch()
     # TODO update result
     return {'rst': True}
-    
+
 @app.route('/ls', methods=['GET', 'POST'])
 def list_files():
-        
+    global root_folder
     if request.is_json:
         json_data = request.get_json()
         
@@ -178,7 +186,8 @@ def list_files():
         print(raw_data)
         return {'rst': False, 'error': 'should be json format'}
 
-def get_files_and_folders(folder, last_file = ''):
+def get_files_and_folders(folder):
+    global root_folder
     file_paths = {}
     file_paths['files'] = []
     file_paths['folders'] = []
@@ -192,10 +201,7 @@ def get_files_and_folders(folder, last_file = ''):
     with os.scandir(folder) as entries:
         for file_path in entries:
             if file_path.is_file():
-                if (file_path == last_file):
-                    file_paths['files'].append(file_path.name + "*")
-                else:
-                    file_paths['files'].append(file_path.name)
+                file_paths['files'].append(file_path.name)
             else:
                 file_paths['folders'].append(file_path.name)
     
@@ -232,6 +238,7 @@ def shell_df():
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete_file():
+    global root_folder
     if request.is_json:
         json_data = request.get_json()
         

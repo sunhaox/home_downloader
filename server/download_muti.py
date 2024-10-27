@@ -1,4 +1,5 @@
 import argparse
+import os
 import threading
 import requests
 from loguru import logger
@@ -9,7 +10,11 @@ def download_ts(base_url, list, num, range, tmp_folder):
     global gl_progress
     new_list = list[num * range: min((num + 1) * range, len(list))]
     for index, str in enumerate(new_list):
-        if str.startswith('#'):
+        if str.startswith('#') or str == '':
+            continue
+        if os.path.exists(tmp_folder+'/'+str):
+            gl_progress[num] = index
+            logger.debug(f't{num}: {sum(gl_progress)}/{len(list)} exist: {str}')
             continue
         with requests.get(base_url + '/' + str, stream=True) as response:
             # 检查请求是否成功
@@ -24,6 +29,7 @@ def download_ts(base_url, list, num, range, tmp_folder):
                     logger.debug(f't{num}: {downloaded}/{len(list)} downlowded: {str}')
                 else:
                     logger.error(f'Error: wrong file type: {str}')
+    logger.debug(f'download {num} finished')
                     
 def download(url, thread_num, tmp_folder = './'):
     global gl_progress
