@@ -1,19 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, notification, TreeSelect } from 'antd';
 import type {  FormProps, GetProp, TreeSelectProps } from 'antd';
+import { BulbOutlined } from '@ant-design/icons';
 import config from '../config';
 
 type DefaultOptionType = GetProp<TreeSelectProps, 'treeData'>[number];
 
 var gl_id_num = 1
 
-const DownloadWidget: React.FC = () => {
-    const [messageApi, mcontextHolder] = message.useMessage();
+interface DLComponentProps{
+    dlName: string;
+    dlUrl: string
+}
+
+interface FormValues {
+    name: string;
+    url: string;
+    path: string;
+}
+
+const DownloadWidget: React.FC<DLComponentProps> = (props) => {
     const [notificationApi, ncontextHolder] = notification.useNotification();
     const [value, setValue] = useState<string>();
     const [treeData, setTreeData] = useState<Omit<DefaultOptionType, 'label'>[]>([
         { id: 1, pId: 0, value: '/', title: '/' }
     ]);
+    const [form] = Form.useForm<FormValues>();
+
+    useEffect(() => {
+        // TODO Not works
+        console.log(`dw name: ${props.dlName}`)
+        form.setFieldsValue({name: props.dlName, url: props.dlUrl})
+    })
 
     const onChange = (newValue: string) => {
         console.log('newvalue: '+newValue);
@@ -83,7 +101,7 @@ const DownloadWidget: React.FC = () => {
         return []
     }
 
-    const onFinish: FormProps<string>['onFinish'] = async (values) => {
+    const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
         console.log('Success:', values);
         try {
             const response = await fetch(config.host + '/media_dl', {
@@ -121,10 +139,48 @@ const DownloadWidget: React.FC = () => {
         }
     };
 
+    const onAutoFillClick = async () => {
+        try {
+            const text = await navigator.clipboard.readText()
+            try {
+                let json_obj = JSON.parse(text)
+                if ('name' in json_obj && 'url' in json_obj) {
+                    console.log(`name: ${json_obj['name']}, url: ${json_obj['url']}`)
+                    form.setFieldsValue({name: json_obj['name'], url: json_obj['url']})
+                }
+                else {
+                    notificationApi.open({
+                        type: 'warning',
+                        message: <>Miss fileds: {text}</>,
+                        duration: 0
+                    })
+                }
+            }
+            catch (err) {
+                notificationApi.open({
+                    type: 'warning',
+                    message: <>Can not convert to JSON: {text}</>,
+                    duration: 0
+                })
+            }
+        }
+        catch (err) {
+            notificationApi.open({
+                type: 'warning',
+                message: "Can not get data from clipboard!",
+                duration: 0
+            })
+        }
+    }
+
     return (
         <>
+            <div style={{textAlign: 'right'}}>
+                <Button onClick={onAutoFillClick}>
+                    <BulbOutlined />
+                </Button>
+            </div>
             {ncontextHolder}
-            {mcontextHolder}
             <Form
                 name="download_info"
                 labelCol={{ span: 8 }}
@@ -133,6 +189,7 @@ const DownloadWidget: React.FC = () => {
                 initialValues={{ remember: true }}
                 onFinish={onFinish}
                 autoComplete="off"
+                form={form}
             >
                 <Form.Item label="Path" name="path" rules={[{required: true}]} >
                     <TreeSelect
@@ -152,12 +209,12 @@ const DownloadWidget: React.FC = () => {
                 </Form.Item>
 
                 <Form.Item label="Url" name="url" rules={[{required: true}]} >
-                    <Input id='DownloadWidget_url'/>
+                    <Input id='DownloadWidget_url' />
                 </Form.Item>
 
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
-                        Test
+                        Download
                     </Button>
                 </Form.Item>
             </Form>

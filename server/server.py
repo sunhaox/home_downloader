@@ -153,7 +153,7 @@ def media_dl():
         if (os.path.exists(root_folder + '/' + path + '/' + name)):
             return {'rst': False, 'error': f'file {root_folder}/{path}/{name} exist!'}
         
-        rst = download_media.download_media(root_folder + '/' +path+'/'+name, url, 1)
+        rst = download_media.download_media(root_folder + '/' +path+'/'+name, url, 10)
         
         if rst:
             return {'rst': True}

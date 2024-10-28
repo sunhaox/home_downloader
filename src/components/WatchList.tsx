@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Button, Collapse, message, Popconfirm } from 'antd';
-import { CopyOutlined, DeleteOutlined, FileSyncOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CopyOutlined, DeleteOutlined, FileSyncOutlined, FormOutlined, ReloadOutlined } from '@ant-design/icons';
 import type {CollapseProps, PopconfirmProps} from 'antd';
 import config from '../config'
 
-const WatchList: React.FC = () => {
+interface ComponentProps {
+    updateDownloadInfo: (name:string, url:string) => void
+}
+
+const WatchList: React.FC<ComponentProps> = (props) => {
     const [messageApi, contextHolder] = message.useMessage();
     const [showInfo, setShowInfo] = useState<CollapseProps['items']>([]);
 
@@ -83,14 +87,25 @@ const WatchList: React.FC = () => {
         return {
             key: obj['name'],
             label: obj['name'],
-            children: <><ul>{list.map((val, index) => <li key={val} onClick={() => {
-                // TODO maybe need to check the filed
-                navigator.clipboard.writeText(obj['list'][val]['media'])
-                messageApi.open({
-                    type: 'info',
-                    content: 'web url copied to the clipboard.'
-                })
-            }}>{val}</li>)}</ul></>,
+            children: <><ul>{list.map((val, index) => 
+                <li key={val}>
+                    <CopyOutlined onClick={() => {
+                        // TODO maybe need to check the filed
+                        navigator.clipboard.writeText(obj['list'][val]['media'])
+                        messageApi.open({
+                            type: 'info',
+                            content: 'web url copied to the clipboard.'
+                        })
+                    }} />
+                    <FormOutlined onClick={() => {
+                        // TODO maybe need to check the filed
+                        props.updateDownloadInfo(obj['list'][val]['title'], obj['list'][val]['media']);
+                        // TODO Copy info to clipboard as a workaround
+                        navigator.clipboard.writeText(JSON.stringify({'name': obj['list'][val]['title'], 'url': obj['list'][val]['media']}))
+                    }} />
+                    {val}
+                </li>
+            )}</ul></>,
             extra: <>
             <CopyOutlined 
             onClick={(event) => {
