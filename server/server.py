@@ -170,6 +170,25 @@ def sync():
     # TODO update result
     return {'rst': True}
 
+@app.route('/sync_season', methods=['GET', 'POST'])
+def sync_season():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        name = json_data['name']
+        
+        #TODO return rst
+        rst = spider.fetch_season(name)
+        
+        if rst:
+            return {'rst': True}
+        else:
+            return {'rst': False, 'error': 'download error'}
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+        return {'rst': False, 'error': 'should be json format'}
+
 @app.route('/ls', methods=['GET', 'POST'])
 def list_files():
     global root_folder

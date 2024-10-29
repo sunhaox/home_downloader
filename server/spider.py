@@ -43,7 +43,7 @@ def init_season_info_from_json(season_json):
     
     season = SeasonInfo(season_json['name'], season_json['url'])
     for item in season_json['list']:
-        list_info = init_list_info_from_json(item)
+        list_info = init_list_info_from_json(season_json['list'][item])
         if list_info:
             season.list[list_info.title] = list_info
     return season
@@ -209,6 +209,24 @@ def fetch():
     db = read_info(JSON_FILE)
     new_db = update_info(db)
     write_info(JSON_FILE, new_db)
+    
+def fetch_season(name):
+    db = read_info(JSON_FILE)
+    target_db = []
+    for season in db:
+        if season.name == name:
+            # shallow copy
+            target_db = [season]
+            break
+    if len(target_db) != 1:
+        return False, "Can not find target season"
+    
+    new_db = update_info(target_db)
+    
+    # shallow copy, so the original db has been changed
+    # just write it back to json
+    write_info(JSON_FILE, db)
+    return True, ""
 
 def test(url):
     # create a SeasonInfo instance

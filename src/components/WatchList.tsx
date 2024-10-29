@@ -89,24 +89,63 @@ const WatchList: React.FC<ComponentProps> = (props) => {
             label: obj['name'],
             children: <><ul>{list.map((val, index) => 
                 <li key={val}>
-                    <CopyOutlined onClick={() => {
-                        // TODO maybe need to check the filed
-                        navigator.clipboard.writeText(obj['list'][val]['media'])
-                        messageApi.open({
-                            type: 'info',
-                            content: 'web url copied to the clipboard.'
-                        })
-                    }} />
                     <FormOutlined onClick={() => {
                         // TODO maybe need to check the filed
                         props.updateDownloadInfo(obj['list'][val]['title'], obj['list'][val]['media']);
                         // TODO Copy info to clipboard as a workaround
                         navigator.clipboard.writeText(JSON.stringify({'name': obj['list'][val]['title'], 'url': obj['list'][val]['media']}))
+                        messageApi.open({
+                            type: 'info',
+                            content: 'web url copied to the clipboard.'
+                        })
                     }} />
                     {val}
                 </li>
             )}</ul></>,
             extra: <>
+            <ReloadOutlined 
+            onClick={async (event) => {
+                try {
+                    const response = await fetch(config.host + '/sync_season', {
+                        method: 'POST',
+                        headers: new Headers({'Content-Type': 'application/json'}),
+                        body: JSON.stringify({name: obj['name']})
+                    });
+                    const result = await response.text();
+                    try{
+                        const json = JSON.parse(result);
+                        if (json['rst'] !== true) {
+                            messageApi.open({
+                                type: 'warning',
+                                content: <>Sync failed: {json['error']}</>
+                            })
+                        }
+                        else {
+                            messageApi.open({
+                                type: 'info',
+                                content: "Sync may take a long time, please wait."
+                            })
+                        }
+        
+                    }
+                    catch(error) {
+                        const e = error as Error;
+                        messageApi.open({
+                            type: 'error',
+                            content: <>Error happened when sync data: {e.message}</>
+                        })
+                    }
+                }
+                catch (error) {
+                    const e = error as Error;
+                    messageApi.open({
+                        type: 'error',
+                        content: <>Error happened when fetch {config.host + '/sync_season'}: {e.message}</>
+                    })
+                }
+                event.stopPropagation();
+            }}
+            />
             <CopyOutlined 
             onClick={(event) => {
                 navigator.clipboard.writeText(obj['url'])
