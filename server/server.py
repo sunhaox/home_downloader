@@ -10,6 +10,7 @@ import download_media
 app = Flask(__name__)
 CORS(app)
 
+CONFIG_PATH="/config/config.json"
 
 db_json_file_path = ''
 root_folder = '/storage/media/'
@@ -276,10 +277,10 @@ def delete_file():
 if __name__ == '__main__':
     
     # check the config file
-    if (not os.path.exists("config.json")):
+    if (not os.path.exists(CONFIG_PATH)):
         # create the config file if not exist
         data = {}
-        data['db_json'] = 'db.json'
+        data['db_json'] = '/config/db.json'
         data['sdx'] = '/dev/sdb1'
         data['root'] = '/storage/media/'
         with open('config.json', 'w') as ofile:
