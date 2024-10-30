@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Collapse, message, Popconfirm } from 'antd';
+import { Button, Collapse, message, notification, Popconfirm } from 'antd';
 import { CopyOutlined, DeleteOutlined, FileSyncOutlined, FormOutlined, ReloadOutlined } from '@ant-design/icons';
 import type {CollapseProps, PopconfirmProps} from 'antd';
 import config from '../config'
@@ -9,7 +9,7 @@ interface ComponentProps {
 }
 
 const WatchList: React.FC<ComponentProps> = (props) => {
-    const [messageApi, contextHolder] = message.useMessage();
+    const [notificationApi, ncontextHolder] = notification.useNotification();
     const [showInfo, setShowInfo] = useState<CollapseProps['items']>([]);
 
     const onChange = (key: string | string[]) => {
@@ -36,16 +36,18 @@ const WatchList: React.FC<ComponentProps> = (props) => {
             try{
                 const json = JSON.parse(result);
                 if (json['rst'] === true) {
-                    messageApi.open({
+                    notificationApi.open({
                         type: 'success',
-                        content: 'Delete successfully!'
+                        message: 'Delete successfully!',
+                        duration: 0
                     })
 
                 }
                 else {
-                    messageApi.open({
+                    notificationApi.open({
                         type: 'warning',
-                        content: <>Delete failed: {json['error']}</>
+                        message: <>Delete failed: {json['error']}</>,
+                        duration: 0
                     })
                 }
 
@@ -53,17 +55,19 @@ const WatchList: React.FC<ComponentProps> = (props) => {
             }
             catch(error) {
                 const e = error as Error;
-                messageApi.open({
+                notificationApi.open({
                     type: 'error',
-                    content: <>Error happened when processing data: {e.message}</>
+                    message: <>Error happened when processing data: {e.message}</>,
+                    duration: 0
                 })
             }
         }
         catch (error) {
             const e = error as Error;
-            messageApi.open({
+            notificationApi.open({
                 type: 'error',
-                content: <>Error happened when fetch {config.host + '/delete_json'}: {e.message}</>
+                message: <>Error happened when fetch {config.host + '/delete_json'}: {e.message}</>,
+                duration: 0
             })
         }
     };
@@ -94,9 +98,10 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                         props.updateDownloadInfo(obj['list'][val]['title'], obj['list'][val]['media']);
                         // TODO Copy info to clipboard as a workaround
                         navigator.clipboard.writeText(JSON.stringify({'name': obj['list'][val]['title'], 'url': obj['list'][val]['media']}))
-                        messageApi.open({
+                        notificationApi.open({
                             type: 'info',
-                            content: 'web url copied to the clipboard.'
+                            message: 'web url copied to the clipboard.',
+                            duration: 0
                         })
                     }} />
                     {val}
@@ -115,32 +120,36 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                     try{
                         const json = JSON.parse(result);
                         if (json['rst'] !== true) {
-                            messageApi.open({
+                            notificationApi.open({
                                 type: 'warning',
-                                content: <>Sync failed: {json['error']}</>
+                                message: <>Sync failed: {json['error']}</>,
+                                duration: 0
                             })
                         }
                         else {
-                            messageApi.open({
+                            notificationApi.open({
                                 type: 'info',
-                                content: "Sync may take a long time, please wait."
+                                message: "Sync may take a long time, please wait.",
+                                duration: 0
                             })
                         }
         
                     }
                     catch(error) {
                         const e = error as Error;
-                        messageApi.open({
+                        notificationApi.open({
                             type: 'error',
-                            content: <>Error happened when sync data: {e.message}</>
+                            message: <>Error happened when sync data: {e.message}</>,
+                            duration: 0
                         })
                     }
                 }
                 catch (error) {
                     const e = error as Error;
-                    messageApi.open({
+                    notificationApi.open({
                         type: 'error',
-                        content: <>Error happened when fetch {config.host + '/sync_season'}: {e.message}</>
+                        message: <>Error happened when fetch {config.host + '/sync_season'}: {e.message}</>,
+                        duration: 0
                     })
                 }
                 event.stopPropagation();
@@ -149,9 +158,10 @@ const WatchList: React.FC<ComponentProps> = (props) => {
             <CopyOutlined 
             onClick={(event) => {
                 navigator.clipboard.writeText(obj['url'])
-                messageApi.open({
+                notificationApi.open({
                     type: 'info',
-                    content: 'web url copied to the clipboard.'
+                    message: 'web url copied to the clipboard.',
+                    duration: 0
                 })
                 event.stopPropagation();
             }}
@@ -181,32 +191,36 @@ const WatchList: React.FC<ComponentProps> = (props) => {
             try{
                 const json = JSON.parse(result);
                 if (json['rst'] !== true) {
-                    messageApi.open({
+                    notificationApi.open({
                         type: 'warning',
-                        content: <>Referesh failed: {json['error']}</>
+                        message: <>Referesh failed: {json['error']}</>,
+                        duration: 0
                     })
                 }
                 else {
-                    messageApi.open({
+                    notificationApi.open({
                         type: 'info',
-                        content: "Sync may take a long time, please wait."
+                        message: "Sync may take a long time, please wait.",
+                        duration: 0
                     })
                 }
 
             }
             catch(error) {
                 const e = error as Error;
-                messageApi.open({
+                notificationApi.open({
                     type: 'error',
-                    content: <>Error happened when processing data: {e.message}</>
+                    message: <>Error happened when processing data: {e.message}</>,
+                    duration: 0
                 })
             }
         }
         catch (error) {
             const e = error as Error;
-            messageApi.open({
+            notificationApi.open({
                 type: 'error',
-                content: <>Error happened when fetch {config.host + '/sync'}: {e.message}</>
+                message: <>Error happened when fetch {config.host + '/sync'}: {e.message}</>,
+                duration: 0
             })
         }
     }
@@ -219,9 +233,10 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                 const json = JSON.parse(result);
                 var rst:CollapseProps['items'] = [];
                 if (json['rst'] !== true) {
-                    messageApi.open({
+                    notificationApi.open({
                         type: 'warning',
-                        content: <>Referesh failed: {json['error']}</>
+                        message: <>Referesh failed: {json['error']}</>,
+                        duration: 0
                     })
                 }
                 else {
@@ -237,24 +252,26 @@ const WatchList: React.FC<ComponentProps> = (props) => {
             }
             catch(error) {
                 const e = error as Error;
-                messageApi.open({
+                notificationApi.open({
                     type: 'error',
-                    content: <>Error happened when processing data: {e.message}</>
+                    message: <>Error happened when processing data: {e.message}</>,
+                    duration: 0
                 })
             }
         }
         catch (error) {
             const e = error as Error;
-            messageApi.open({
+            notificationApi.open({
                 type: 'error',
-                content: <>Error happened when fetch {config.host + '/read_json'}: {e.message}</>
+                message: <>Error happened when fetch {config.host + '/read_json'}: {e.message}</>,
+                duration: 0
             })
         }
     }
 
     return (
         <>
-                    {contextHolder}
+                    {ncontextHolder}
                     <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} />
                     <Button type="primary" shape="circle" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} />
                     <Collapse
