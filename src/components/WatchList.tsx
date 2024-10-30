@@ -96,13 +96,6 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                     <FormOutlined onClick={() => {
                         // TODO maybe need to check the filed
                         props.updateDownloadInfo(obj['list'][val]['title'], obj['list'][val]['media']);
-                        // TODO Copy info to clipboard as a workaround
-                        navigator.clipboard.writeText(JSON.stringify({'name': obj['list'][val]['title'], 'url': obj['list'][val]['media']}))
-                        notificationApi.open({
-                            type: 'info',
-                            message: 'web url copied to the clipboard.',
-                            duration: 0
-                        })
                     }} />
                     {val}
                 </li>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, notification, TreeSelect } from 'antd';
 import type {  FormProps, GetProp, TreeSelectProps } from 'antd';
-import { BulbOutlined } from '@ant-design/icons';
 import config from '../config';
 
 type DefaultOptionType = GetProp<TreeSelectProps, 'treeData'>[number];
@@ -28,9 +27,12 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
     const [form] = Form.useForm<FormValues>();
 
     useEffect(() => {
-        // TODO Not works
-        console.log(`dw name: ${props.dlName}`)
-        form.setFieldsValue({name: props.dlName, url: props.dlUrl})
+        if (!props.dlName.endsWith('.mp4')) {
+            form.setFieldsValue({name: props.dlName + '.mp4', url: props.dlUrl})
+        }
+        else {
+            form.setFieldsValue({name: props.dlName, url: props.dlUrl})
+        }
     })
 
     const onChange = (newValue: string) => {
@@ -139,47 +141,8 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
         }
     };
 
-    const onAutoFillClick = async () => {
-        try {
-            const text = await navigator.clipboard.readText()
-            try {
-                let json_obj = JSON.parse(text)
-                if ('name' in json_obj && 'url' in json_obj) {
-                    console.log(`name: ${json_obj['name']}, url: ${json_obj['url']}`)
-                    form.setFieldsValue({name: json_obj['name'], url: json_obj['url']})
-                }
-                else {
-                    notificationApi.open({
-                        type: 'warning',
-                        message: <>Miss fileds: {text}</>,
-                        duration: 0
-                    })
-                }
-            }
-            catch (err) {
-                notificationApi.open({
-                    type: 'warning',
-                    message: <>Can not convert to JSON: {text}</>,
-                    duration: 0
-                })
-            }
-        }
-        catch (err) {
-            notificationApi.open({
-                type: 'warning',
-                message: "Can not get data from clipboard!",
-                duration: 0
-            })
-        }
-    }
-
     return (
         <>
-            <div style={{textAlign: 'right'}}>
-                <Button onClick={onAutoFillClick}>
-                    <BulbOutlined />
-                </Button>
-            </div>
             {ncontextHolder}
             <Form
                 name="download_info"
