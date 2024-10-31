@@ -101,8 +101,7 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                 </li>
             )}</ul></>,
             extra: <>
-            <ReloadOutlined 
-            onClick={async (event) => {
+            <Button icon={<FileSyncOutlined></FileSyncOutlined>} onClick={async (event) => {
                 try {
                     const response = await fetch(config.host + '/sync_season', {
                         method: 'POST',
@@ -146,10 +145,8 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                     })
                 }
                 event.stopPropagation();
-            }}
-            />
-            <CopyOutlined 
-            onClick={(event) => {
+            }}/>
+            <Button icon={<CopyOutlined />} onClick={(event) => {
                 navigator.clipboard.writeText(obj['url'])
                 notificationApi.open({
                     type: 'info',
@@ -167,8 +164,7 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                 cancelText="No"
                 okButtonProps={{id: 'del-'+obj['name']}}
             >
-                <DeleteOutlined
-                    onClick={(event) => {
+                <Button icon={<DeleteOutlined />} onClick={(event) => {
                         event.stopPropagation();
                     }}
                 />
@@ -265,8 +261,8 @@ const WatchList: React.FC<ComponentProps> = (props) => {
     return (
         <>
                     {ncontextHolder}
-                    <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} />
-                    <Button type="primary" shape="circle" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} />
+                    <Button type="primary" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} >Reload</Button>
+                    <Button type="primary" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} style={{left: '10px'}}>Sync</Button>
                     <Collapse
                         defaultActiveKey={['1']}
                         onChange={onChange}

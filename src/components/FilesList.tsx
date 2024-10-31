@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './FilesList.css';
 import { FileImageOutlined,  ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined, FolderAddOutlined } from '@ant-design/icons';
-import { Button, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress, message, Modal, Input } from 'antd';
+import { Button, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress, notification, Modal, Input } from 'antd';
 import config from '../config'
 
 interface State {
@@ -54,13 +54,13 @@ class FilesList extends Component<{}, State> {
                         )): '/'}
                     </div>
                     <Tooltip title="add">
-                        <Button type="primary" shape="circle" icon={<FolderAddOutlined  />} onClick={this.onAddFolderButtonClick} />
+                        <Button type="primary" icon={<FolderAddOutlined  />} onClick={this.onAddFolderButtonClick}  style={{marginRight: '10px'}}>Add</Button>
                     </Tooltip>
                     <Tooltip title="back">
-                        <Button type="primary" shape="circle" icon={<ArrowLeftOutlined />} onClick={this.onBackButtonClick} />
+                        <Button type="primary" icon={<ArrowLeftOutlined />} onClick={this.onBackButtonClick}  style={{marginRight: '10px'}}>Back</Button>
                     </Tooltip>
                     <Tooltip title="refresh">
-                        <Button type="primary" shape="circle" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} />
+                        <Button type="primary" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} >Refersh</Button>
                     </Tooltip>
                 </div>
                 <Divider />
@@ -139,20 +139,20 @@ class FilesList extends Component<{}, State> {
                 try{
                     const json = JSON.parse(result);
                     if (json['rst'] === true) {
-                        message.success('File deleted succefully.')
+                        notification.success({message: 'File deleted succefully.'})
                     }
                     else {
-                        message.error(<>Delete file failed: {json['error']}</>)
+                        notification.error({message: <>Delete file failed: {json['error']}</>})
                     }
                 }
                 catch(error) {
-                    message.error(<>Error happened when processing delete data: {error}</>)
+                    notification.error({message: <>Error happened when processing delete data: {error}</>})
                 }
 
                 this.onRefreshButtonClick();
             }
             catch(error) {
-                message.error(<>Error happened when fetch {config.host}/delete: {error}</>)
+                notification.error({message: <>Error happened when fetch {config.host}/delete: {error}</>})
             }            
         }
     }
@@ -167,15 +167,15 @@ class FilesList extends Component<{}, State> {
                     this.setState({storageInfo: {total: json['data'].total, used: json['data'].used, persent: json['data'].persent}})
                 }
                 else {
-                    message.error(<>Get storeage used info failed: {json['error']}</>)
+                    notification.error({message: <>Get storeage used info failed: {json['error']}</>})
                 }
             }
             catch(error) {
-                message.error(<>Error happened when processing storage used info data: {error}</>)
+                notification.error({message: <>Error happened when processing storage used info data: {error}</>})
             }
         }
         catch (error) {
-            message.error(<>Error happened fetch from {config.host}/df: {error}</>)
+            notification.error({message: <>Error happened fetch from {config.host}/df: {error}</>})
         }
     }
 
@@ -250,11 +250,11 @@ class FilesList extends Component<{}, State> {
                 this.setState({filesInfo: rst});
             }
             else {
-                message.error(json['error'])
+                notification.error({message: json['error']})
             }
         }
         catch (error) {
-            message.error(<>Error happened when fetch {config.host}/ls: {error}</>)
+            notification.error({message: <>Error happened when fetch {config.host}/ls: {error}</>})
         }
     }
 
@@ -273,16 +273,16 @@ class FilesList extends Component<{}, State> {
             const json = await response.json();
             console.log(json);
             if (json['rst'] === true) {
-                message.success('New folder added successfuly')
+                notification.success({message: 'New folder added successfuly'})
             }
             else {
-                message.error(json['error'])
+                notification.error({message: json['error']})
             }
 
             this.onRefreshButtonClick();
         }
         catch (error) {
-            message.error(<>Error happened when fetch {config.host}/new_folder: {error}</>)
+            notification.error({message: <>Error happened when fetch {config.host}/new_folder: {error}</>})
         }
         this.setState({isModalOpen: false});
     }
