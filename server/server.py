@@ -1,4 +1,5 @@
 import json
+import threading
 from flask import Flask, render_template, request
 import re
 import subprocess
@@ -14,6 +15,7 @@ CONFIG_PATH="/config/config.json"
 
 db_json_file_path = ''
 root_folder = '/storage/media/'
+sync_thread = None
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -195,24 +197,51 @@ def media_dl():
     
 @app.route('/sync', methods=['GET', 'POST'])
 def sync():
-    spider.fetch()
+    global sync_thread
+    if sync_thread != None:
+        if sync_thread.is_alive():
+            return {'rst': False, 'error': 'Now is syncing, try later.'}
+    
+    try:
+        thread = threading.Thread(target=spider.fetch)
+        thread.start()
+        sync_thread = thread
+    except Exception as error:
+        return {'rst': False, 'error': f'error happended when creating thread: {error}'}
+    
     # TODO update result
+    return {'rst': True}
+
+@app.route('/sync_test', methods=['GET', 'POST'])
+def sync_test():
+    global sync_thread
+    if sync_thread != None:
+        if sync_thread.is_alive():
+            return {'rst': False, 'error': 'Now is syncing, try later.'}
+
     return {'rst': True}
 
 @app.route('/sync_season', methods=['GET', 'POST'])
 def sync_season():
+    global sync_thread
+    if sync_thread != None:
+        if sync_thread.is_alive():
+            return {'rst': False, 'error': 'Now is syncing, try later.'}
+    
     if request.is_json:
         json_data = request.get_json()
         
         name = json_data['name']
         
-        #TODO return rst
-        rst = spider.fetch_season(name)
+        #TODO update result
+        try:
+            thread = threading.Thread(target=spider.fetch_season, args=(name, ))
+            thread.start()
+            sync_thread = thread
+        except Exception as error:
+            return {'rst': False, 'error': f'error happended when creating thread: {error}'}
         
-        if rst:
-            return {'rst': True}
-        else:
-            return {'rst': False, 'error': 'download error'}
+        return {'rst': True}
     else:
         raw_data = request.get_data(as_text=True)
         print(raw_data)

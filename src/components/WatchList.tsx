@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Collapse, message, notification, Popconfirm } from 'antd';
-import { CopyOutlined, DeleteOutlined, FileSyncOutlined, FormOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CoffeeOutlined, CopyOutlined, DeleteOutlined, FileSyncOutlined, FormOutlined, ReloadOutlined } from '@ant-design/icons';
 import type {CollapseProps, PopconfirmProps} from 'antd';
 import config from '../config'
 
@@ -214,6 +214,47 @@ const WatchList: React.FC<ComponentProps> = (props) => {
         }
     }
 
+    const onSyncTestButtonClick = async() => {
+        try {
+            const response = await fetch(config.host + '/sync_test');
+            const result = await response.text();
+            try{
+                const json = JSON.parse(result);
+                if (json['rst'] !== true) {
+                    notificationApi.open({
+                        type: 'warning',
+                        message: <>Sync test failed: {json['error']}</>,
+                        duration: 0
+                    })
+                }
+                else {
+                    notificationApi.open({
+                        type: 'info',
+                        message: "No sync thread running",
+                        duration: 0
+                    })
+                }
+
+            }
+            catch(error) {
+                const e = error as Error;
+                notificationApi.open({
+                    type: 'error',
+                    message: <>Error happened when processing data: {e.message}</>,
+                    duration: 0
+                })
+            }
+        }
+        catch (error) {
+            const e = error as Error;
+            notificationApi.open({
+                type: 'error',
+                message: <>Error happened when fetch {config.host + '/sync_test'}: {e.message}</>,
+                duration: 0
+            })
+        }
+    }
+
     const onRefreshButtonClick = async () => {
         try {
             const response = await fetch(config.host + '/read_json');
@@ -262,7 +303,8 @@ const WatchList: React.FC<ComponentProps> = (props) => {
         <>
                     {ncontextHolder}
                     <Button type="primary" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} >Reload</Button>
-                    <Button type="primary" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} style={{left: '10px'}}>Sync</Button>
+                    <Button type="primary" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} style={{marginLeft: '10px'}}>Sync</Button>
+                    <Button type="primary" icon={<CoffeeOutlined />} onClick={onSyncTestButtonClick} style={{marginLeft: '10px'}}>Test</Button>
                     <Collapse
                         defaultActiveKey={['1']}
                         onChange={onChange}
