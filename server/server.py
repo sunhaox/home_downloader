@@ -291,13 +291,25 @@ def delete_file():
         json_data = request.get_json()
         
         fileName = json_data['file']
+        rst = True
+        e = ''
         
         if os.path.isfile(root_folder + fileName):
-            os.remove(root_folder + fileName)
+            try:
+                os.remove(root_folder + fileName)
+            except Exception as error:
+                rst = False
+                e = f'Error happened when delete file {root_folder + fileName}: {error}'
         elif os.path.isdir(root_folder + fileName):
-            os.rmdir(root_folder + fileName)
-        
-        return {'rst': True}
+            try:
+                os.rmdir(root_folder + fileName)
+            except Exception as error:
+                rst = False
+                e = f'Error happened when delete folder {root_folder + fileName}: {error}'
+        if rst:
+            return {'rst': True}
+        else:
+            return {'rst': False, 'error': e}
     else:
         raw_data = request.get_data(as_text=True)
         return {'rst': False, 'error': 'should be json format'}
