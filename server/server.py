@@ -283,13 +283,20 @@ if __name__ == '__main__':
         data['db_json'] = '/config/db.json'
         data['sdx'] = '/dev/sdb1'
         data['root'] = '/storage/media/'
-        with open('config.json', 'w') as ofile:
+        
+        db_json_file_path = data['db_json']
+        root_folder = data['root']
+        with open(CONFIG_PATH, 'w') as ofile:
             json.dump(data, ofile, indent=4)
     else:
-        with open('config.json', 'r') as ifile:
+        with open(CONFIG_PATH, 'r') as ifile:
             data = json.load(ifile)
             db_json_file_path = data['db_json']
             root_folder = data['root']
+            
+    if (not os.path.exists(db_json_file_path)):
+        with open(db_json_file_path, 'w') as file:
+            json.dump([], file, indent=4)
     
     # app.run(debug=True, port=8088)
     server = pywsgi.WSGIServer(('0.0.0.0', 8088), app)
