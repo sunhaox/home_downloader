@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined,  ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { Button, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress, message } from 'antd';
+import { FileImageOutlined,  ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined, FolderAddOutlined } from '@ant-design/icons';
+import { Button, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress, message, Modal, Input } from 'antd';
 import config from '../config'
 
 interface State {
     filesInfo: {name:string, path:string, type:string}[],
     folder: string[],
-    storageInfo: {used: string, total: string, persent: number}
+    storageInfo: {used: string, total: string, persent: number},
+    isModalOpen: boolean,
+    newFolderName: string
 }
 
 class FilesList extends Component<{}, State> {
@@ -20,7 +22,9 @@ class FilesList extends Component<{}, State> {
                 {name: "common_file_name.mp4", path: "testpath", type: "file"}
             ],
             folder: [],
-            storageInfo: {used: 'none', total: 'none', persent: 0}
+            storageInfo: {used: 'none', total: 'none', persent: 0},
+            isModalOpen: false,
+            newFolderName: ''
         }
 
         this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this);
@@ -28,6 +32,9 @@ class FilesList extends Component<{}, State> {
         this.onFolderClicked = this.onFolderClicked.bind(this);
         this.onBackButtonClick = this.onBackButtonClick.bind(this);
         this.onRefreshStorageUsedInfo = this.onRefreshStorageUsedInfo.bind(this);
+        this.onAddFolderButtonClick = this.onAddFolderButtonClick.bind(this);
+        this.onModalOk = this.onModalOk.bind(this);
+        this.onModalCancle = this.onModalCancle.bind(this);
 
         this.onRefreshButtonClick();
         this.onRefreshStorageUsedInfo();
@@ -46,6 +53,9 @@ class FilesList extends Component<{}, State> {
                             '/' + val
                         )): '/'}
                     </div>
+                    <Tooltip title="add">
+                        <Button type="primary" shape="circle" icon={<FolderAddOutlined  />} onClick={this.onAddFolderButtonClick} />
+                    </Tooltip>
                     <Tooltip title="back">
                         <Button type="primary" shape="circle" icon={<ArrowLeftOutlined />} onClick={this.onBackButtonClick} />
                     </Tooltip>
@@ -102,6 +112,12 @@ class FilesList extends Component<{}, State> {
                     </>
                 ))}
 
+                <Modal title="Add Folder" open={this.state.isModalOpen} onOk={this.onModalOk} onCancel={this.onModalCancle}>
+                    <p>New Folder Name:</p>
+                    <Input onChange={(e) => {
+                        this.setState({newFolderName: e.target.value})
+                    }}/>
+                </Modal>
             </>
         );
     }
@@ -240,6 +256,39 @@ class FilesList extends Component<{}, State> {
         catch (error) {
             message.error(<>Error happened when fetch {config.host}/ls: {error}</>)
         }
+    }
+
+    onAddFolderButtonClick() {
+        this.setState({isModalOpen: true});
+    }
+
+    async onModalOk() {
+        console.log(`new folder name: ${this.state.newFolderName}`);
+        try {
+            const response = await fetch(config.host + '/new_folder', {
+                method: 'POST',
+                headers: new Headers({'Content-Type': 'application/json'}),
+                body: JSON.stringify({folder: this.state.folder + '/' + this.state.newFolderName})
+            });
+            const json = await response.json();
+            console.log(json);
+            if (json['rst'] === true) {
+                message.success('New folder added successfuly')
+            }
+            else {
+                message.error(json['error'])
+            }
+
+            this.onRefreshButtonClick();
+        }
+        catch (error) {
+            message.error(<>Error happened when fetch {config.host}/new_folder: {error}</>)
+        }
+        this.setState({isModalOpen: false});
+    }
+
+    onModalCancle() {
+        this.setState({isModalOpen: false});
     }
 }
 

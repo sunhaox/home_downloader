@@ -56,6 +56,34 @@ def test_show_info():
         print(raw_data)
     return {'rst': False, 'error': 'should be json format'}
 
+@app.route('/new_folder', methods=['GET', 'POST'])
+def new_folder():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        if 'folder' not in json_data:
+            return {
+                'rst': False,
+                'error': f'no "folder" filed in request'
+            }
+            
+        folder_name = json_data['folder']
+        
+        if folder_name.startswith(root_folder):
+            full_path = folder_name
+        else:
+            full_path = root_folder + '/' + folder_name
+        
+        os.makedirs(full_path, exist_ok=True)
+
+        return {
+            'rst': True
+        }
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+    return {'rst': False, 'error': 'should be json format'}
+
 @app.route('/submit_show_info', methods=['GET', 'POST'])
 def submit_show_info():
     if request.is_json:
