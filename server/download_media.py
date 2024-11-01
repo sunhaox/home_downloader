@@ -7,7 +7,7 @@ import subprocess
 import download_muti
 from loguru import logger
 
-def download_media(output, url, thread_num = 5):
+def download_media(output, url, thread_num = 5, download_info = None):
     random_name = str(random.randint(1000,9999))
     if len(output.split('/')) == 1:
         # only file name
@@ -26,8 +26,12 @@ def download_media(output, url, thread_num = 5):
     
     rst = True
     try:
-        dl_rst, m3u8_file = download_muti.download(url, thread_num, tmp_folder)
+        d = download_muti.downloader()
+        dl_rst, m3u8_file = d.download(url, thread_num, tmp_folder, download_info)
         rst = rst and dl_rst
+        
+        if download_info != None:
+            download_info.state = 'Converting'
         result = subprocess.run(['ffmpeg', '-i', m3u8_file, '-c', 'copy', output], capture_output=True, text=True)
         exe_output = result.stdout
 

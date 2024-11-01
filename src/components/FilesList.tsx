@@ -17,10 +17,7 @@ class FilesList extends Component<{}, State> {
         super(props);
 
         this.state = {
-            filesInfo: [
-                {name: "very_long_long_long_long_long_file_name.mp4", path: "testpath", type: "file"},
-                {name: "common_file_name.mp4", path: "testpath", type: "file"}
-            ],
+            filesInfo: [],
             folder: [],
             storageInfo: {used: 'none', total: 'none', persent: 0},
             isModalOpen: false,

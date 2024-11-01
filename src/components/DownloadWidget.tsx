@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Input, message, notification, TreeSelect } from 'antd';
+import { Button, Card, Collapse, Divider, Form, Input, message, notification, TreeSelect } from 'antd';
 import type {  FormProps, GetProp, TreeSelectProps } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import config from '../config';
 
 type DefaultOptionType = GetProp<TreeSelectProps, 'treeData'>[number];
@@ -18,6 +19,15 @@ interface FormValues {
     path: string;
 }
 
+interface DownloadingInfo{
+    name: string;
+    path: string;
+    media: string;
+    state: string;
+}
+
+const {Panel} = Collapse;
+
 const DownloadWidget: React.FC<DLComponentProps> = (props) => {
     const [notificationApi, ncontextHolder] = notification.useNotification();
     const [value, setValue] = useState<string>();
@@ -25,6 +35,8 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
         { id: 1, pId: 0, value: '/', title: '/' }
     ]);
     const [form] = Form.useForm<FormValues>();
+
+    const [downloadingInfo, setDownloadingInfo] = useState<DownloadingInfo[]>([]);
 
     useEffect(() => {
         if (!props.dlName.endsWith('.mp4')) {
@@ -121,6 +133,13 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
                         duration: 0
                     })
                 }
+                else {
+                    notificationApi.open({
+                        type: 'success',
+                        message: <>Download start</>,
+                        duration: 0
+                    })
+                }
             }
             catch(error) {
                 const e = error as Error;
@@ -140,6 +159,43 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
             })
         }
     };
+
+    const onRefreshStateButtonClick = async () => {
+        try {
+            const response = await fetch(config.host + '/media_dl_info');
+            const result = await response.text();
+            try{
+                const json = JSON.parse(result);
+                if (json['rst'] !== true) {
+                    notificationApi.open({
+                        type: 'warning',
+                        message: <>Get download info: {json['error']}</>,
+                        duration: 0
+                    })
+                }
+                else {
+                    console.log(json['data'])
+                    setDownloadingInfo(json['data'])
+                }
+            }
+            catch(error) {
+                const e = error as Error;
+                notificationApi.open({
+                    type: 'error',
+                    message: <>Error happened when processing data: {e.message}</>,
+                    duration: 0
+                })
+            }
+        }
+        catch (error) {
+            const e = error as Error;
+            notificationApi.open({
+                type: 'error',
+                message: <>Error happened when fetch {config.host + '/media_dl_info'}: {e.message}</>,
+                duration: 0
+            })
+        }
+    }
 
     return (
         <>
@@ -181,6 +237,19 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
                     </Button>
                 </Form.Item>
             </Form>
+            <Divider />
+            <div style={{textAlign:'right'}}>
+                <Button icon={<ReloadOutlined /> } onClick={onRefreshStateButtonClick}></Button>
+            </div>
+            <div style={{textAlign: 'left'}}>
+                {downloadingInfo.map((val, index) => (
+                    <Card title={val.name}>
+                        <p><b>Path:</b> {val.path}</p>
+                        <p><b>Url:</b> {val.media}</p>
+                        <p><b>State:</b> {val.state}</p>
+                    </Card>
+                ))}
+            </div>
         </>
     );
 };

@@ -16,7 +16,23 @@ CONFIG_PATH="/config/config.json"
 db_json_file_path = ''
 root_folder = '/storage/media/'
 sync_thread = None
+download_info = []
 
+class DownloadInfo:
+    def __init__(self, name, path, media, thread = None):
+        self.name = name
+        self.path = path
+        self.media = media
+        self.state = ''
+        self.thread = thread
+    
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'path': self.path,
+            'media': self.media,
+            'state': self.state
+            }
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -171,6 +187,7 @@ def delete_json():
 @app.route('/media_dl', methods=['GET', 'POST'])
 def media_dl():
     global root_folder
+    global download_info
     if request.is_json:
         json_data = request.get_json()
         
@@ -181,19 +198,36 @@ def media_dl():
         if not name.endswith('.mp4'):
             return {'rst': False, 'error': 'media type should be mp4'}
         
+        # TODO what if download same file twice?
         if (os.path.exists(root_folder + '/' + path + '/' + name)):
             return {'rst': False, 'error': f'file {root_folder}/{path}/{name} exist!'}
         
-        rst = download_media.download_media(root_folder + '/' +path+'/'+name, url, 10)
+        try:
+            di = DownloadInfo(name, path, url)
+            thread = threading.Thread(target=download_media.download_media, args=(root_folder+'/'+path+'/'+name, url, 10, di))
+            di.thread = thread
+            thread.start()
+            download_info.append(di)
+        except Exception as error:
+            return {'rst': False, 'error': f'error happened when creating thread: {error}'}
         
-        if rst:
-            return {'rst': True}
-        else:
-            return {'rst': False, 'error': 'download error'}
+        return {'rst': True}
     else:
         raw_data = request.get_data(as_text=True)
         print(raw_data)
         return {'rst': False, 'error': 'should be json format'}
+
+@app.route('/media_dl_info', methods=['GET', 'POST'])
+def media_dl_info():
+    global download_info
+    rst = []
+    new_arr = [x for x in download_info if x.thread.is_alive()]
+    
+    download_info = new_arr
+    for info in download_info:
+        rst.append(info.to_dict())
+
+    return {'rst': True, 'data': rst}
     
 @app.route('/sync', methods=['GET', 'POST'])
 def sync():
@@ -207,7 +241,7 @@ def sync():
         thread.start()
         sync_thread = thread
     except Exception as error:
-        return {'rst': False, 'error': f'error happended when creating thread: {error}'}
+        return {'rst': False, 'error': f'error happened when creating thread: {error}'}
     
     # TODO update result
     return {'rst': True}
@@ -239,7 +273,7 @@ def sync_season():
             thread.start()
             sync_thread = thread
         except Exception as error:
-            return {'rst': False, 'error': f'error happended when creating thread: {error}'}
+            return {'rst': False, 'error': f'error happened when creating thread: {error}'}
         
         return {'rst': True}
     else:
