@@ -1,5 +1,6 @@
 const config = {
-    host: ""
+    host: "",
+    version: "v1.0"
 }
 
 export default config;

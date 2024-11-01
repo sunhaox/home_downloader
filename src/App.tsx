@@ -5,6 +5,7 @@ import WatchList from './components/WatchList';
 import AddWidget from './components/AddWidget';
 import FilesList from './components/FilesList';
 import DownloadWidget from './components/DownloadWidget';
+import AboutWidget from './components/AboutWidget';
 
 const App: React.FC = () => {
 
@@ -43,6 +44,11 @@ const App: React.FC = () => {
             label: 'Download',
             children: <><DownloadWidget dlName={downloadName} dlUrl={downloadUrl} ></DownloadWidget></>,
             destroyInactiveTabPane: true
+        },
+        {
+            key: '5',
+            label: 'About',
+            children: <><AboutWidget></AboutWidget></>
         }
     ]);
 
@@ -75,6 +81,11 @@ const App: React.FC = () => {
                 label: 'Download',
                 children: <><DownloadWidget dlName={downloadName} dlUrl={downloadUrl} ></DownloadWidget></>,
                 destroyInactiveTabPane: true
+            },
+            {
+                key: '5',
+                label: 'About',
+                children: <><AboutWidget></AboutWidget></>
             }
         ])
     }, [downloadName])
