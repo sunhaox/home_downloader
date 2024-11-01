@@ -1,7 +1,7 @@
-# go2tv Web Controller
+# Home Downloader
 
 [中文版](README.zh-CN.md)  
-通过网页控制go2tv，实现基于UPnP/DLNA的投屏控制。
+基于网页抓取、管理和下载多媒体m3u8文件并转码为mp4存储。
 
 ## 文件结构
 
@@ -22,6 +22,9 @@
     * flask
     * flask_cors
     * gevent
+    * loguru
+    * requests
+    * bs4
 
 ### Build
 
@@ -54,3 +57,17 @@ python server.py
 ```
 
 网站默认端口是8088，之后通过在浏览器里访问`localhost:8088`来访问控制页面。
+
+## Docker
+用下面命令创建docker镜像：
+```
+docker build -t home_downloader .
+```
+
+用下面命令启动docker容器：
+```
+docker run -dt --name home_downloader -p 8088:8088 -v /storage/media:/storage/media -v /home_downloader/config/:/config localhost/home_downloader:latest
+```
+默认端口号是`8088`。  
+配置文件位于`/config`内。  
+下载目录位于`/storage/media`内。也可以在配置文件`config.json`内修改。
