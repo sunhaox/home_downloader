@@ -4,6 +4,7 @@ from flask import Flask, render_template, request
 import re
 import subprocess
 import os
+import shutil
 from flask_cors import CORS
 from gevent import pywsgi
 import spider
@@ -365,7 +366,7 @@ def delete_file():
                 e = f'Error happened when delete file {root_folder + fileName}: {error}'
         elif os.path.isdir(root_folder + fileName):
             try:
-                os.rmdir(root_folder + fileName)
+                shutil.rmtree(root_folder + fileName)
             except Exception as error:
                 rst = False
                 e = f'Error happened when delete folder {root_folder + fileName}: {error}'
