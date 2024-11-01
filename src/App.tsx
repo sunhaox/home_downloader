@@ -35,7 +35,7 @@ const App: React.FC = () => {
         },
         {
             key: '3',
-            label: 'Exploer',
+            label: 'Explorer',
             children: <><FilesList></FilesList></>
         },
         {
@@ -67,7 +67,7 @@ const App: React.FC = () => {
             },
             {
                 key: '3',
-                label: 'Exploer',
+                label: 'Explorer',
                 children: <><FilesList></FilesList></>
             },
             {
