@@ -1,15 +1,18 @@
 import React, { Component } from 'react';
 import './FilesList.css';
-import { FileImageOutlined,  ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined, FolderAddOutlined } from '@ant-design/icons';
+import { FileImageOutlined,  ReloadOutlined, DeleteOutlined, FolderOpenOutlined, ArrowLeftOutlined, FolderAddOutlined, EditOutlined } from '@ant-design/icons';
 import { Button, Tooltip, Divider, Row, Col, Popconfirm, Flex, Progress, notification, Modal, Input } from 'antd';
 import config from '../config'
 
 interface State {
     filesInfo: {name:string, path:string, type:string}[],
     folder: string[],
-    storageInfo: {used: string, total: string, persent: number},
-    isModalOpen: boolean,
-    newFolderName: string
+    storageInfo: {used: string, total: string, percent: number},
+    isAddModalOpen: boolean,
+    newFolderName: string,
+    renameNewName: string,
+    oldName: string,
+    isRenameModalOpen: boolean
 }
 
 class FilesList extends Component<{}, State> {
@@ -19,9 +22,12 @@ class FilesList extends Component<{}, State> {
         this.state = {
             filesInfo: [],
             folder: [],
-            storageInfo: {used: 'none', total: 'none', persent: 0},
-            isModalOpen: false,
-            newFolderName: ''
+            storageInfo: {used: 'none', total: 'none', percent: 0},
+            isAddModalOpen: false,
+            newFolderName: '',
+            renameNewName: '',
+            oldName: '',
+            isRenameModalOpen: false
         }
 
         this.onRefreshButtonClick = this.onRefreshButtonClick.bind(this);
@@ -30,8 +36,10 @@ class FilesList extends Component<{}, State> {
         this.onBackButtonClick = this.onBackButtonClick.bind(this);
         this.onRefreshStorageUsedInfo = this.onRefreshStorageUsedInfo.bind(this);
         this.onAddFolderButtonClick = this.onAddFolderButtonClick.bind(this);
-        this.onModalOk = this.onModalOk.bind(this);
-        this.onModalCancle = this.onModalCancle.bind(this);
+        this.onAddModalOk = this.onAddModalOk.bind(this);
+        this.onAddModalCancel = this.onAddModalCancel.bind(this);
+        this.onRenameModalOk = this.onRenameModalOk.bind(this);
+        this.onRenameModalCancel = this.onRenameModalCancel.bind(this);
 
         this.onRefreshButtonClick();
         this.onRefreshStorageUsedInfo();
@@ -72,6 +80,9 @@ class FilesList extends Component<{}, State> {
                                 {val.name}
                             </Col>
                             <Col span={4}>
+                                <Button icon={<EditOutlined />} onClick={() => {
+                                    this.setState({isRenameModalOpen: true, oldName: val.name})
+                                }}></Button>
                                 <Popconfirm
                                     title="Delete the file"
                                     description="Are you sure to delete this file?"
@@ -91,6 +102,9 @@ class FilesList extends Component<{}, State> {
                                 {val.name}
                             </Col>
                             <Col span={4}>
+                                <Button icon={<EditOutlined />} onClick={() => {
+                                    this.setState({isRenameModalOpen: true, oldName: val.name})
+                                }}></Button>
                                 <Popconfirm
                                     title="Delete the file"
                                     description="Are you sure to delete this file?"
@@ -109,10 +123,17 @@ class FilesList extends Component<{}, State> {
                     </>
                 ))}
 
-                <Modal title="Add Folder" open={this.state.isModalOpen} onOk={this.onModalOk} onCancel={this.onModalCancle}>
+                <Modal title="Add Folder" open={this.state.isAddModalOpen} onOk={this.onAddModalOk} onCancel={this.onAddModalCancel}>
                     <p>New Folder Name:</p>
                     <Input onChange={(e) => {
                         this.setState({newFolderName: e.target.value})
+                    }}/>
+                </Modal>
+                <Modal title="Rename file/folder" open={this.state.isRenameModalOpen} onOk={this.onRenameModalOk} onCancel={this.onRenameModalCancel}>
+                    <p><b>Old Name:</b> {this.state.oldName}</p>
+                    <p><b>New Name:</b></p>
+                    <Input onChange={(e) => {
+                        this.setState({renameNewName: e.target.value})
                     }}/>
                 </Modal>
             </>
@@ -256,16 +277,51 @@ class FilesList extends Component<{}, State> {
     }
 
     onAddFolderButtonClick() {
-        this.setState({isModalOpen: true});
+        this.setState({isAddModalOpen: true});
     }
 
-    async onModalOk() {
+    async onRenameModalOk() {
+        let folder = '';
+        this.state.folder.forEach(function(element) {
+            folder+= '/' + element;
+        }) 
+        const old_name = folder + '/' + this.state.oldName;
+        const new_name = folder + '/' + this.state.renameNewName;
+        console.log(`old: ${old_name} new: ${new_name}`);
+        try {
+            const response = await fetch(config.host + '/rename', {
+                method: 'POST',
+                headers: new Headers({'Content-Type': 'application/json'}),
+                body: JSON.stringify({old: old_name, new: new_name})
+            });
+            const json = await response.json();
+            console.log(json);
+            if (json['rst'] === true) {
+                notification.success({message: 'Rename successfully'})
+            }
+            else {
+                notification.error({message: json['error']})
+            }
+
+            this.onRefreshButtonClick();
+        }
+        catch (error) {
+            notification.error({message: <>Error happened when fetch {config.host}/rename: {error}</>})
+        }
+        this.setState({isRenameModalOpen: false});
+    }
+
+    async onAddModalOk() {
         console.log(`new folder name: ${this.state.newFolderName}`);
+        let folder = '';
+        this.state.folder.forEach(function(element) {
+            folder+= '/' + element;
+        }) 
         try {
             const response = await fetch(config.host + '/new_folder', {
                 method: 'POST',
                 headers: new Headers({'Content-Type': 'application/json'}),
-                body: JSON.stringify({folder: this.state.folder + '/' + this.state.newFolderName})
+                body: JSON.stringify({folder: folder + '/' + this.state.newFolderName})
             });
             const json = await response.json();
             console.log(json);
@@ -281,11 +337,15 @@ class FilesList extends Component<{}, State> {
         catch (error) {
             notification.error({message: <>Error happened when fetch {config.host}/new_folder: {error}</>})
         }
-        this.setState({isModalOpen: false});
+        this.setState({isAddModalOpen: false});
     }
 
-    onModalCancle() {
-        this.setState({isModalOpen: false});
+    onAddModalCancel() {
+        this.setState({isAddModalOpen: false});
+    }
+
+    onRenameModalCancel() {
+        this.setState({isRenameModalOpen: false});
     }
 }
 

@@ -103,6 +103,40 @@ def new_folder():
         print(raw_data)
     return {'rst': False, 'error': 'should be json format'}
 
+@app.route('/rename', methods=['GET', 'POST'])
+def rename():
+    if request.is_json:
+        json_data = request.get_json()
+        
+        if 'new' not in json_data or 'old' not in json_data:
+            return {
+                'rst': False,
+                'error': f'Miss filed "new" or "old" in request'
+            }
+            
+        new_path = json_data['new']
+        old_path = json_data['old']
+        
+        if new_path.startswith(root_folder):
+            new_path = new_path
+        else:
+            new_path = root_folder + '/' + new_path
+            
+        if old_path.startswith(root_folder):
+            old_path = old_path
+        else:
+            old_path = root_folder + '/' + old_path
+        
+        os.rename(old_path, new_path)
+
+        return {
+            'rst': True
+        }
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+    return {'rst': False, 'error': 'should be json format'}
+
 @app.route('/submit_show_info', methods=['GET', 'POST'])
 def submit_show_info():
     if request.is_json:
