@@ -42,7 +42,7 @@ class FilesList extends Component<{}, State> {
             <>
                 <div className='FilesList-header'>
                     <Flex gap="small" vertical> 
-                        <Progress percent={this.state.storageInfo.persent} />
+                        <Progress percent={this.state.storageInfo.percent} />
                         Used: {this.state.storageInfo.used} Total: {this.state.storageInfo.total}
                     </Flex>
                     <div style={{textAlign:'left'}}>
@@ -57,7 +57,7 @@ class FilesList extends Component<{}, State> {
                         <Button type="primary" icon={<ArrowLeftOutlined />} onClick={this.onBackButtonClick}  style={{marginRight: '10px'}}>Back</Button>
                     </Tooltip>
                     <Tooltip title="refresh">
-                        <Button type="primary" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} >Refersh</Button>
+                        <Button type="primary" icon={<ReloadOutlined />} onClick={this.onRefreshButtonClick} >Refresh</Button>
                     </Tooltip>
                 </div>
                 <Divider />
@@ -67,7 +67,7 @@ class FilesList extends Component<{}, State> {
                         <Row>
                             {val.type === 'file'?
                             <>
-                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hiden'}}>
+                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hidden'}}>
                                 <FileImageOutlined />
                                 {val.name}
                             </Col>
@@ -86,7 +86,7 @@ class FilesList extends Component<{}, State> {
                             </>
                             :
                             <>
-                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hiden'}} onClick={this.onFolderClicked} id={'folder-'+val.name}>
+                            <Col span={20} style={{textAlign: 'left', textOverflow: 'hidden'}} onClick={this.onFolderClicked} id={'folder-'+val.name}>
                                 <FolderOpenOutlined />
                                 {val.name}
                             </Col>
@@ -136,7 +136,7 @@ class FilesList extends Component<{}, State> {
                 try{
                     const json = JSON.parse(result);
                     if (json['rst'] === true) {
-                        notification.success({message: 'File deleted succefully.'})
+                        notification.success({message: 'File deleted successfully.'})
                     }
                     else {
                         notification.error({message: <>Delete file failed: {json['error']}</>})
@@ -161,10 +161,10 @@ class FilesList extends Component<{}, State> {
             try{
                 const json = JSON.parse(result);
                 if (json['rst'] === true) {
-                    this.setState({storageInfo: {total: json['data'].total, used: json['data'].used, persent: json['data'].persent}})
+                    this.setState({storageInfo: {total: json['data'].total, used: json['data'].used, percent: json['data'].percent}})
                 }
                 else {
-                    notification.error({message: <>Get storeage used info failed: {json['error']}</>})
+                    notification.error({message: <>Get storage used info failed: {json['error']}</>})
                 }
             }
             catch(error) {
@@ -211,7 +211,7 @@ class FilesList extends Component<{}, State> {
         this.getFilesName(folder);
     }
 
-    tranverseJson(obj:any, rst: {name:string, path:string, type:string}[]) {
+    traverseJson(obj:any, rst: {name:string, path:string, type:string}[]) {
         let path = obj['path']
         let folders = obj['folders'];
         if (Array.isArray(folders)) {
@@ -242,7 +242,7 @@ class FilesList extends Component<{}, State> {
             console.log(json);
             if (json['rst'] === true) {
                 var rst:{name: string, path:string, type:string}[] = [];
-                this.tranverseJson(json['data'], rst);
+                this.traverseJson(json['data'], rst);
 
                 this.setState({filesInfo: rst});
             }
@@ -270,7 +270,7 @@ class FilesList extends Component<{}, State> {
             const json = await response.json();
             console.log(json);
             if (json['rst'] === true) {
-                notification.success({message: 'New folder added successfuly'})
+                notification.success({message: 'New folder added successfully'})
             }
             else {
                 notification.error({message: json['error']})

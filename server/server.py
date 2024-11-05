@@ -344,11 +344,11 @@ def shell_df():
             if match:
                 total = match.group(1)
                 used = match.group(2)
-                persent = match.group(3)
-                persent = int(persent[:-1])
-                return {'rst': True, 'data': {'total': total, 'used': used, 'persent': persent}}
+                percent = match.group(3)
+                percent = int(percent[:-1])
+                return {'rst': True, 'data': {'total': total, 'used': used, 'percent': percent}}
     
-    return {'rst': True, 'data': {'total': 'x', 'used': 'x', 'persent': 0}}
+    return {'rst': True, 'data': {'total': 'x', 'used': 'x', 'percent': 0}}
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete_file():
