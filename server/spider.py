@@ -205,13 +205,13 @@ def write_info(file_name: str, db: list[ListInfo]):
     except Exception as e:
         logger.error(f"Error happened when reading: {e}")
 
-def fetch():
-    db = read_info(JSON_FILE)
+def fetch(json_file = JSON_FILE):
+    db = read_info(json_file)
     new_db = update_info(db)
-    write_info(JSON_FILE, new_db)
+    write_info(json_file, new_db)
     
-def fetch_season(name):
-    db = read_info(JSON_FILE)
+def fetch_season(name, json_file = JSON_FILE):
+    db = read_info(json_file)
     target_db = []
     for season in db:
         if season.name == name:
@@ -225,7 +225,7 @@ def fetch_season(name):
     
     # shallow copy, so the original db has been changed
     # just write it back to json
-    write_info(JSON_FILE, db)
+    write_info(json_file, db)
     return True, ""
 
 def test(url):

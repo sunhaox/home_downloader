@@ -233,12 +233,13 @@ def media_dl_info():
 @app.route('/sync', methods=['GET', 'POST'])
 def sync():
     global sync_thread
+    global db_json_file_path
     if sync_thread != None:
         if sync_thread.is_alive():
             return {'rst': False, 'error': 'Now is syncing, try later.'}
     
     try:
-        thread = threading.Thread(target=spider.fetch)
+        thread = threading.Thread(target=spider.fetch, args=(db_json_file_path, ))
         thread.start()
         sync_thread = thread
     except Exception as error:
@@ -259,6 +260,7 @@ def sync_test():
 @app.route('/sync_season', methods=['GET', 'POST'])
 def sync_season():
     global sync_thread
+    global db_json_file_path
     if sync_thread != None:
         if sync_thread.is_alive():
             return {'rst': False, 'error': 'Now is syncing, try later.'}
@@ -270,7 +272,7 @@ def sync_season():
         
         #TODO update result
         try:
-            thread = threading.Thread(target=spider.fetch_season, args=(name, ))
+            thread = threading.Thread(target=spider.fetch_season, args=(name, db_json_file_path))
             thread.start()
             sync_thread = thread
         except Exception as error:
