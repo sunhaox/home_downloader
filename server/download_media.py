@@ -32,6 +32,10 @@ def download_media(output, url, thread_num = 5, download_info = None):
         
         if download_info != None:
             download_info.state = 'Converting'
+        
+        if download_info != None and download_info.status == False:
+            return False
+        
         result = subprocess.run(['ffmpeg', '-i', m3u8_file, '-c', 'copy', output], capture_output=True, text=True)
         exe_output = result.stdout
 
@@ -41,6 +45,9 @@ def download_media(output, url, thread_num = 5, download_info = None):
             logger.error(f'm3u8: {m3u8_file}')
             logger.error(f'output: {output}')
             rst = False
+        else:
+            if download_info != None:
+                download_info.state = 'deleting temporary files.'
         
     except Exception as e:
         logger.error(f'download media error: {e}')
@@ -53,6 +60,9 @@ def download_media(output, url, thread_num = 5, download_info = None):
             logger.error(f'Error happened when deleting tmp folder: {error}')
     else:
         logger.warning(f'tmp folder {tmp_folder} not exist')
+    
+    if download_info != None:
+        download_info.state = 'Finish.'
     
     return rst
 

@@ -21,19 +21,29 @@ download_info = []
 
 class DownloadInfo:
     def __init__(self, name, path, media, thread = None):
-        self.name = name
-        self.path = path
-        self.media = media
-        self.state = ''
-        self.thread = thread
+        self.name = name        # output file name
+        self.path = path        # output file folder
+        self.media = media      # m3u8 url
+        self.state = ''         # string state
+        self.thread = thread    # Thread obj
+        self.status = True      # processing status, break when it's False
     
     def to_dict(self):
+        if self.thread == None:
+            return {
+                'name': self.name,
+                'path': self.path,
+                'media': self.media,
+                'state': self.state,
+                'thread': ''
+            }
         return {
             'name': self.name,
             'path': self.path,
             'media': self.media,
-            'state': self.state
-            }
+            'state': self.state,
+            'thread': self.thread.getName()
+        }
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -256,13 +266,29 @@ def media_dl():
 def media_dl_info():
     global download_info
     rst = []
-    new_arr = [x for x in download_info if x.thread.is_alive()]
-    
-    download_info = new_arr
     for info in download_info:
         rst.append(info.to_dict())
 
     return {'rst': True, 'data': rst}
+
+@app.route('/media_dl_delete', methods=['GET', 'POST'])
+def media_dl_delete():
+    global download_info
+    
+    if request.is_json:
+        json_data = request.get_json()
+        
+        thread = json_data['thread']
+        
+        new_arr = [x for x in download_info if x.thread.getName() != thread]
+    
+        download_info = new_arr
+        
+        return {'rst': True}
+    else:
+        raw_data = request.get_data(as_text=True)
+        print(raw_data)
+        return {'rst': False, 'error': 'should be json format'}
     
 @app.route('/sync', methods=['GET', 'POST'])
 def sync():

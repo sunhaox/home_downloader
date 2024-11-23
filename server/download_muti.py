@@ -12,13 +12,17 @@ class downloader:
     def download_ts(self, base_url, list, num, range, tmp_folder, download_info = None):
         new_list = list[num * range: min((num + 1) * range, len(list))]
         for index, str in enumerate(new_list):
+            if download_info != None and download_info.status == False:
+                break
+            
             if str.startswith('#') or str == '':
                 continue
             if os.path.exists(tmp_folder+'/'+str):
                 self.gl_progress[num] = index
                 logger.debug(f't{num}: {sum(self.gl_progress)}/{len(list)} exist: {str}')
                 continue
-            with requests.get(base_url + '/' + str, stream=True) as response:
+            try:
+                response = requests.get(base_url + '/' + str, stream=True, timeout=30)
                 # 检查请求是否成功
                 if response.status_code == 200:
                     type = str.split('.')[-1]
@@ -33,6 +37,11 @@ class downloader:
                         logger.debug(f't{num}: {downloaded}/{len(list)} downloaded: {str}')
                     else:
                         logger.error(f'Error: wrong file type: {str}')
+            except Exception as e:
+                logger.error(f'Error happened when fetch {base_url + "/" + str}: {e}')
+                if download_info != None:
+                    download_info.status = False
+                break
         logger.debug(f'download {num} finished')
                         
     def download(self, url, thread_num, tmp_folder = './', download_info = None):

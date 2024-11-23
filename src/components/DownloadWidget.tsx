@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Collapse, Divider, Form, Input, message, notification, TreeSelect } from 'antd';
+import { Button, Card, Divider, Form, Input, message, notification, TreeSelect } from 'antd';
 import type {  FormProps, GetProp, TreeSelectProps } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import config from '../config';
 
 type DefaultOptionType = GetProp<TreeSelectProps, 'treeData'>[number];
@@ -24,9 +24,8 @@ interface DownloadingInfo{
     path: string;
     media: string;
     state: string;
+    thread: string;
 }
-
-const {Panel} = Collapse;
 
 const DownloadWidget: React.FC<DLComponentProps> = (props) => {
     const [notificationApi, ncontextHolder] = notification.useNotification();
@@ -44,6 +43,15 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
         }
         else {
             form.setFieldsValue({name: props.dlName, url: props.dlUrl})
+        }
+
+        const timer = setInterval(() => {
+            onRefreshStateButtonClick();
+        }, 2000);
+
+        return () => {
+            clearInterval(timer);
+            console.log('Timer cleared');
         }
     })
 
@@ -197,6 +205,46 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
         }
     }
 
+    const onDeleteThreadButtonClick = async(thread:string) => {
+        try {
+            const response = await fetch(config.host + '/media_dl_delete', {
+                method: 'POST',
+                headers: new Headers({'Content-Type': 'application/json'}),
+                body: JSON.stringify({'thread': thread})
+            });
+            const result = await response.text();
+            try{
+                const json = JSON.parse(result);
+                if (json['rst'] !== true) {
+                    notificationApi.open({
+                        type: 'warning',
+                        message: <>Delete downloading thread error: {json['error']}</>,
+                        duration: 0
+                    })
+                }
+                else {
+                    
+                }
+            }
+            catch(error) {
+                const e = error as Error;
+                notificationApi.open({
+                    type: 'error',
+                    message: <>Error happened when processing data: {e.message}</>,
+                    duration: 0
+                })
+            }
+        }
+        catch (error) {
+            const e = error as Error;
+            notificationApi.open({
+                type: 'error',
+                message: <>Error happened when fetch {config.host + '/media_dl_delete'}: {e.message}</>,
+                duration: 0
+            })
+        }
+    }
+
     return (
         <>
             {ncontextHolder}
@@ -243,10 +291,11 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
             </div>
             <div style={{textAlign: 'left'}}>
                 {downloadingInfo.map((val, index) => (
-                    <Card title={val.name}>
+                    <Card title={val.name} extra={<><Button icon={<DeleteOutlined />} onClick={() => onDeleteThreadButtonClick(val.thread)}></Button></>}>
                         <p><b>Path:</b> {val.path}</p>
                         <p><b>Url:</b> {val.media}</p>
                         <p><b>State:</b> {val.state}</p>
+                        <p><b>Thread:</b> {val.thread}</p>
                     </Card>
                 ))}
             </div>
