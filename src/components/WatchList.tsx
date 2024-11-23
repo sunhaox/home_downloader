@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Collapse, message, notification, Popconfirm } from 'antd';
-import { CoffeeOutlined, CopyOutlined, DeleteOutlined, FileSyncOutlined, FormOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CoffeeOutlined, CopyOutlined, DeleteOutlined, FileSyncOutlined, FormOutlined, LinkOutlined, ReloadOutlined } from '@ant-design/icons';
 import type {CollapseProps, PopconfirmProps} from 'antd';
 import config from '../config'
 
@@ -97,7 +97,7 @@ const WatchList: React.FC<ComponentProps> = (props) => {
                         // TODO maybe need to check the filed
                         props.updateDownloadInfo(obj['list'][val]['title'], obj['list'][val]['media']);
                     }} />
-                    {val}
+                    <a href={obj['list'][val]['url']} target='_blank'>{val}</a>
                 </li>
             )}</ul></>,
             extra: <>
@@ -301,18 +301,18 @@ const WatchList: React.FC<ComponentProps> = (props) => {
 
     return (
         <>
-                    {ncontextHolder}
-                    <Button type="primary" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} >Reload</Button>
-                    <Button type="primary" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} style={{marginLeft: '10px'}}>Sync</Button>
-                    <Button type="primary" icon={<CoffeeOutlined />} onClick={onSyncTestButtonClick} style={{marginLeft: '10px'}}>Test</Button>
-                    <Collapse
-                        defaultActiveKey={['1']}
-                        onChange={onChange}
-                        expandIconPosition={'start'}
-                        items={showInfo}
-                        style={{textAlign:"left"}}
-                    />
-                </>
+            {ncontextHolder}
+            <Button type="primary" icon={<ReloadOutlined />} onClick={onRefreshButtonClick} >Reload</Button>
+            <Button type="primary" icon={<FileSyncOutlined />} onClick={onSyncButtonClick} style={{marginLeft: '10px'}}>Sync</Button>
+            <Button type="primary" icon={<CoffeeOutlined />} onClick={onSyncTestButtonClick} style={{marginLeft: '10px'}}>Test</Button>
+            <Collapse
+                defaultActiveKey={['1']}
+                onChange={onChange}
+                expandIconPosition={'start'}
+                items={showInfo}
+                style={{textAlign:"left"}}
+            />
+        </>
     );
 };
 
