@@ -41,6 +41,7 @@ class downloader:
                 logger.error(f'Error happened when fetch {base_url + "/" + str}: {e}')
                 if download_info != None:
                     download_info.status = False
+                    download_info.state = f'Error {base_url + "/" + str}: {e}'
                 break
         logger.debug(f'download {num} finished')
                         

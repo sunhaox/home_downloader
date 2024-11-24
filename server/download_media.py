@@ -26,15 +26,18 @@ def download_media(output, url, thread_num = 5, download_info = None):
     
     rst = True
     try:
+        if download_info != None:
+            download_info.state = 'Starting'
+            
         d = download_muti.downloader()
         dl_rst, m3u8_file = d.download(url, thread_num, tmp_folder, download_info)
         rst = rst and dl_rst
         
-        if download_info != None:
-            download_info.state = 'Converting'
-        
         if download_info != None and download_info.status == False:
             return False
+        
+        if download_info != None:
+            download_info.state = 'Converting'
         
         result = subprocess.run(['ffmpeg', '-i', m3u8_file, '-c', 'copy', output], capture_output=True, text=True)
         exe_output = result.stdout
