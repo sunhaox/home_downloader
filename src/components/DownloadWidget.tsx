@@ -291,7 +291,7 @@ const DownloadWidget: React.FC<DLComponentProps> = (props) => {
             </div>
             <div style={{textAlign: 'left'}}>
                 {downloadingInfo.map((val, index) => (
-                    <Card title={val.name} extra={<><Button icon={<DeleteOutlined />} onClick={() => onDeleteThreadButtonClick(val.thread)}></Button></>}>
+                    <Card title={val.name} extra={<><Button icon={<DeleteOutlined />} onClick={() => onDeleteThreadButtonClick(val.thread)}></Button></>} style={{lineBreak:'anywhere'}}>
                         <p><b>Path:</b> {val.path}</p>
                         <p><b>Url:</b> {val.media}</p>
                         <p><b>State:</b> {val.state}</p>
