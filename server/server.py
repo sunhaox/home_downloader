@@ -386,7 +386,7 @@ def get_files_and_folders(folder):
 @app.route('/df', methods=['GET', 'POST'])
 def shell_df():
     sdx = ''
-    with open('config.json', 'r') as ifile:
+    with open(CONFIG_PATH, 'r') as ifile:
         data = json.load(ifile)
         sdx = data['sdx']
     
