@@ -46,52 +46,60 @@ class downloader:
         logger.debug(f'download {num} finished')
                         
     def download(self, url, thread_num, tmp_folder = './', download_info = None):
-        with requests.get(url, stream=True) as response:
-            # 检查请求是否成功
-            if response.status_code == 200:
-                type = url.split('.')[-1]
-                if type == 'ts':
-                    with open(url.split('/')[-1], 'wb') as file:
-                        # 按块读取响应内容并写入文件
-                        for chunk in response.iter_content(chunk_size=8192):
-                            file.write(chunk)
-                elif type == 'm3u8':
-                    str_list = response.text.split('\n')
-                    flag = False
-                    for index, str in enumerate(str_list):
-                        if str.startswith('#'):
-                            continue
-                        elif str.endswith('m3u8'):
-                            base_url = url.rsplit('/', 1)
-                            rst, index_file = self.download(base_url[0] + '/' + str, thread_num, tmp_folder, download_info)
-                            if rst:
-                                return rst, index_file
-                        elif str.endswith('ts'):
-                            base_url = url.rsplit('/', 1)[0]
-                            flag = True
-                            threads = []
-                            self.gl_progress = [0 for _ in range(thread_num)]
-                            for i in range(thread_num):
-                                thread = threading.Thread(target=self.download_ts, args=(base_url, str_list, i, int(len(str_list)/thread_num)+1, tmp_folder, download_info))
-                                threads.append(thread)
-                                thread.start()
-                            break
-                    
-                    if flag:
-                        # 等待线程执行完成
-                        for thread in threads:
-                            thread.join()
-                        # 保存m3u8文件
-                        with open(tmp_folder + '/' + url.split('/')[-1], 'wb') as file:
+        try:
+            if download_info != None:
+                download_info.state = 'fetching m3u8 list'
+            
+            logger.debug(f'try to fetch {url}')
+            with requests.get(url, stream=True, timeout=30) as response:
+                # 检查请求是否成功
+                if response.status_code == 200:
+                    type = url.split('.')[-1]
+                    if type == 'ts':
+                        with open(url.split('/')[-1], 'wb') as file:
+                            # 按块读取响应内容并写入文件
                             for chunk in response.iter_content(chunk_size=8192):
                                 file.write(chunk)
+                    elif type == 'm3u8':
+                        str_list = response.text.split('\n')
+                        flag = False
+                        for index, str in enumerate(str_list):
+                            if str.startswith('#'):
+                                continue
+                            elif str.endswith('m3u8'):
+                                base_url = url.rsplit('/', 1)
+                                rst, index_file = self.download(base_url[0] + '/' + str, thread_num, tmp_folder, download_info)
+                                if rst:
+                                    return rst, index_file
+                            elif str.endswith('ts'):
+                                base_url = url.rsplit('/', 1)[0]
+                                flag = True
+                                threads = []
+                                self.gl_progress = [0 for _ in range(thread_num)]
+                                for i in range(thread_num):
+                                    thread = threading.Thread(target=self.download_ts, args=(base_url, str_list, i, int(len(str_list)/thread_num)+1, tmp_folder, download_info))
+                                    threads.append(thread)
+                                    thread.start()
+                                break
                         
-                        return True, tmp_folder + '/' +url.split('/')[-1]
+                        if flag:
+                            # 等待线程执行完成
+                            for thread in threads:
+                                thread.join()
+                            # 保存m3u8文件
+                            with open(tmp_folder + '/' + url.split('/')[-1], 'wb') as file:
+                                for chunk in response.iter_content(chunk_size=8192):
+                                    file.write(chunk)
+                            
+                            return True, tmp_folder + '/' +url.split('/')[-1]
+                    else:
+                        logger.debug('其他文件类型，跳过')
                 else:
-                    logger.debug('其他文件类型，跳过')
-            else:
-                logger.error("下载失败，状态码:", response.status_code)
-                
+                    logger.error("下载失败，状态码:", response.status_code)
+                    
+                return False, ''
+        except Exception as e:
+            logger.error(f'Download {url} failed: {e}')
             return False, ''
 
 def main():
