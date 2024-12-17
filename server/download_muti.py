@@ -100,6 +100,8 @@ class downloader:
                 return False, ''
         except Exception as e:
             logger.error(f'Download {url} failed: {e}')
+            if download_info != None:
+                download_info.status = False
             return False, ''
 
 def main():
