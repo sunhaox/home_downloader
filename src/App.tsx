@@ -6,6 +6,7 @@ import AddWidget from './components/AddWidget';
 import FilesList from './components/FilesList';
 import DownloadWidget from './components/DownloadWidget';
 import AboutWidget from './components/AboutWidget';
+import Settings from './components/Settings';
 
 const App: React.FC = () => {
 
@@ -47,6 +48,11 @@ const App: React.FC = () => {
         },
         {
             key: '5',
+            label: 'Settings',
+            children: <><Settings></Settings></>
+        },
+        {
+            key: '6',
             label: 'About',
             children: <><AboutWidget></AboutWidget></>
         }
@@ -84,6 +90,11 @@ const App: React.FC = () => {
             },
             {
                 key: '5',
+                label: 'Settings',
+                children: <><Settings></Settings></>
+            },
+            {
+                key: '6',
                 label: 'About',
                 children: <><AboutWidget></AboutWidget></>
             }

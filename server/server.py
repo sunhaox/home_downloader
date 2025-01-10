@@ -451,6 +451,51 @@ def delete_file():
         raw_data = request.get_data(as_text=True)
         return {'rst': False, 'error': 'should be json format'}
     
+@app.route('/settings_get', methods=['GET', 'POST'])
+def settings_get():
+    if (not os.path.exists(CONFIG_PATH)):
+        return {'rst': False, 'error': 'Config file not exist!'}
+    
+    with open(CONFIG_PATH, 'r') as ifile:
+        data = json.load(ifile)
+        return {'rst': True, 'data': data}
+
+    return {'rst': False, 'error': 'error happened when getting settings'}
+
+@app.route('/settings_set', methods=['GET', 'POST'])
+def settings_set():
+    global gl_root_folder
+    if request.is_json:
+        json_data = request.get_json()
+        
+        with open(CONFIG_PATH, 'w') as ofile:
+            json.dump(json_data, ofile, indent=4)
+            
+        init_settings()
+        
+        return {'rst': True}
+    else:
+        raw_data = request.get_data(as_text=True)
+        return {'rst': False, 'error': 'should be json format'}
+
+def init_settings():
+    global gl_db_json_file_path
+    global gl_root_folder
+    global gl_download_thread_num
+    global gl_download_timeout
+    with open(CONFIG_PATH, 'r') as ifile:
+        data = json.load(ifile)
+        gl_db_json_file_path = data['db_json']
+        gl_root_folder = data['root']
+        gl_download_thread_num = data['download_thread_num']
+        gl_download_timeout = data['download_timeout']
+    
+    # For debug
+    # print(f'gl_db_json_file_path: {gl_db_json_file_path}')
+    # print(f'gl_root_folder: {gl_root_folder}')
+    # print(f'gl_download_thread_num: {gl_download_thread_num}')
+    # print(f'gl_download_timeout: {gl_download_timeout}')
+
 if __name__ == '__main__':
     # check the config file
     if (not os.path.exists(CONFIG_PATH)):
@@ -467,12 +512,7 @@ if __name__ == '__main__':
         with open(CONFIG_PATH, 'w') as ofile:
             json.dump(data, ofile, indent=4)
     else:
-        with open(CONFIG_PATH, 'r') as ifile:
-            data = json.load(ifile)
-            gl_db_json_file_path = data['db_json']
-            gl_root_folder = data['root']
-            gl_download_thread_num = data['download_thread_num']
-            gl_download_timeout = data['download_timeout']
+        init_settings()
             
     if (not os.path.exists(gl_db_json_file_path)):
         with open(gl_db_json_file_path, 'w') as file:
