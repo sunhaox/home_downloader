@@ -9,7 +9,7 @@ class downloader:
     def __init__(self):
         self.gl_progress = []
 
-    def download_ts(self, base_url, list, num, range, tmp_folder, download_info = None):
+    def download_ts(self, base_url, list, num, range, tmp_folder, timeout = 30, download_info = None):
         new_list = list[num * range: min((num + 1) * range, len(list))]
         for index, str in enumerate(new_list):
             if download_info != None and download_info.status == False:
@@ -22,7 +22,7 @@ class downloader:
                 logger.debug(f't{num}: {sum(self.gl_progress)}/{len(list)} exist: {str}')
                 continue
             try:
-                response = requests.get(base_url + '/' + str, stream=True, timeout=30)
+                response = requests.get(base_url + '/' + str, stream=True, timeout=timeout)
                 # 检查请求是否成功
                 if response.status_code == 200:
                     type = str.split('.')[-1]
@@ -45,13 +45,13 @@ class downloader:
                 break
         logger.debug(f'download {num} finished')
                         
-    def download(self, url, thread_num, tmp_folder = './', download_info = None):
+    def download(self, url, thread_num, tmp_folder = './', timeout = 30, download_info = None):
         try:
             if download_info != None:
                 download_info.state = 'fetching m3u8 list'
             
             logger.debug(f'try to fetch {url}')
-            with requests.get(url, stream=True, timeout=30) as response:
+            with requests.get(url, stream=True, timeout=timeout) as response:
                 # 检查请求是否成功
                 if response.status_code == 200:
                     type = url.split('.')[-1]
@@ -68,7 +68,7 @@ class downloader:
                                 continue
                             elif str.endswith('m3u8'):
                                 base_url = url.rsplit('/', 1)
-                                rst, index_file = self.download(base_url[0] + '/' + str, thread_num, tmp_folder, download_info)
+                                rst, index_file = self.download(base_url[0] + '/' + str, thread_num, tmp_folder, timeout, download_info)
                                 if rst:
                                     return rst, index_file
                             elif str.endswith('ts'):
@@ -77,7 +77,7 @@ class downloader:
                                 threads = []
                                 self.gl_progress = [0 for _ in range(thread_num)]
                                 for i in range(thread_num):
-                                    thread = threading.Thread(target=self.download_ts, args=(base_url, str_list, i, int(len(str_list)/thread_num)+1, tmp_folder, download_info))
+                                    thread = threading.Thread(target=self.download_ts, args=(base_url, str_list, i, int(len(str_list)/thread_num)+1, tmp_folder, timeout, download_info))
                                     threads.append(thread)
                                     thread.start()
                                 break

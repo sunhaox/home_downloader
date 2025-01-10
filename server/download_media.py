@@ -7,7 +7,7 @@ import subprocess
 import download_muti
 from loguru import logger
 
-def download_media(output, url, thread_num = 5, download_info = None):
+def download_media(output, url, thread_num = 5, timeout = 30, download_info = None):
     random_name = str(random.randint(1000,9999))
     if len(output.split('/')) == 1:
         # only file name
@@ -30,7 +30,7 @@ def download_media(output, url, thread_num = 5, download_info = None):
             download_info.state = 'Starting'
             
         d = download_muti.downloader()
-        dl_rst, m3u8_file = d.download(url, thread_num, tmp_folder, download_info)
+        dl_rst, m3u8_file = d.download(url, thread_num, tmp_folder, timeout, download_info)
         rst = rst and dl_rst
         
         if download_info != None and download_info.status == False:

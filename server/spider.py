@@ -69,13 +69,13 @@ def init_list_info_from_json(list_json):
     
     return ListInfo(list_json['title'], list_json['url'], list_json['media'])
 
-def get_chaptor_list(url:str) -> dict[str, ListInfo]:
+def get_chapter_list(url:str, timeout = 10) -> dict[str, ListInfo]:
     if url == '':
         return {}
     
     rst = {}
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=timeout)
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -91,13 +91,13 @@ def get_chaptor_list(url:str) -> dict[str, ListInfo]:
         logger.error(f'Error happened when fetch list info {url}: {e}')
     return rst
 
-def getIFrame(url:str):
+def getIFrame(url:str, timeout = 10):
     if url == '':
         return ''
     
     rst = ''
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=timeout)
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -118,13 +118,13 @@ def getIFrame(url:str):
     logger.debug(f'iframe: {rst}')
     return rst
 
-def get_m3u8(url:str) -> str:
+def get_m3u8(url:str, timeout = 10) -> str:
     if url == '':
         return ''
     
     rst = ''
     try:
-        response = requests.get(url, timeout=1)
+        response = requests.get(url, timeout=timeout)
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -142,8 +142,8 @@ def get_m3u8(url:str) -> str:
     logger.debug(f'm3u8: {rst}')
     return rst
 
-def get_new_list(url: str) -> dict[str, ListInfo]:
-    rst = get_chaptor_list(url)
+def get_new_list(url: str, timeout = 10) -> dict[str, ListInfo]:
+    rst = get_chapter_list(url, timeout)
     for title in rst:
         iframe_link = getIFrame(rst[title].url)
         media_link = get_m3u8(iframe_link)
@@ -162,9 +162,9 @@ def download_media(url: str) -> bool:
     # TODO
     return True
 
-def update_info(db:list[SeasonInfo]) -> list[SeasonInfo]:
+def update_info(db:list[SeasonInfo], timeout = 10) -> list[SeasonInfo]:
     for season_info in db:
-        new_list = get_new_list(season_info.url)
+        new_list = get_new_list(season_info.url, timeout)
         added_list = compare_new_with_old(season_info.list, new_list)
         for title in added_list:
             rst = download_media(added_list[title].media)
@@ -205,12 +205,12 @@ def write_info(file_name: str, db: list[ListInfo]):
     except Exception as e:
         logger.error(f"Error happened when reading: {e}")
 
-def fetch(json_file = JSON_FILE):
+def fetch(json_file = JSON_FILE, timeout = 10):
     db = read_info(json_file)
-    new_db = update_info(db)
+    new_db = update_info(db, timeout)
     write_info(json_file, new_db)
     
-def fetch_season(name, json_file = JSON_FILE):
+def fetch_season(name, json_file = JSON_FILE, timeout = 10):
     db = read_info(json_file)
     target_db = []
     for season in db:
@@ -221,7 +221,7 @@ def fetch_season(name, json_file = JSON_FILE):
     if len(target_db) != 1:
         return False, "Can not find target season"
     
-    new_db = update_info(target_db)
+    new_db = update_info(target_db, timeout)
     
     # shallow copy, so the original db has been changed
     # just write it back to json
