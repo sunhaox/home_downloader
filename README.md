@@ -70,4 +70,4 @@ docker run -dt --name home_downloader -p 8088:8088 -v /storage/media:/storage/me
 ```
 Default port number is `8088`.  
 The config files storage in `/config`.  
-The downloaded media files will storage in `/storage/media`. You can modify it in `config.json`.  
+The downloaded media files will storage in `/storage/media`.  You can modify it in `config.json`.  
